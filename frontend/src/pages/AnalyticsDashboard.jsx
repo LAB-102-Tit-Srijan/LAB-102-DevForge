@@ -13,10 +13,10 @@ const AnalyticsDashboard = () => {
   const stats = data || { totalVideos: 0, totalQueries: 0, cacheHitRate: 0, avgResponseTime: 0 };
 
   const cards = [
-    { label: 'Videos Processed', value: stats.totalVideos, icon: <Video className="w-6 h-6" />, gradient: 'from-coral to-coral-light' },
-    { label: 'Questions Asked', value: stats.totalQueries, icon: <MessageSquare className="w-6 h-6" />, gradient: 'from-coral-light to-coral' },
-    { label: 'Cache Hit Rate', value: `${stats.cacheHitRate}%`, icon: <Zap className="w-6 h-6" />, gradient: 'from-success to-emerald-300' },
-    { label: 'Avg Response Time', value: `${stats.avgResponseTime}ms`, icon: <Clock className="w-6 h-6" />, gradient: 'from-warning to-amber-300' },
+    { label: 'Videos Processed', value: stats.totalVideos, icon: <Video className="w-6 h-6" /> },
+    { label: 'Questions Asked', value: stats.totalQueries, icon: <MessageSquare className="w-6 h-6" /> },
+    { label: 'Cache Hit Rate', value: `${stats.cacheHitRate}%`, icon: <Zap className="w-6 h-6" /> },
+    { label: 'Avg Response Time', value: `${stats.avgResponseTime}ms`, icon: <Clock className="w-6 h-6" /> },
   ];
 
   return (
@@ -28,11 +28,11 @@ const AnalyticsDashboard = () => {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-coral to-coral-light flex items-center justify-center mx-auto mb-5 shadow-lg shadow-coral-glow">
-            <BarChart3 className="w-8 h-8 text-bg-app" />
+          <div className="w-16 h-16 rounded-[20px] bg-[var(--accent-muted)] flex items-center justify-center mx-auto mb-5">
+            <BarChart3 className="w-8 h-8" style={{ color: 'var(--accent)' }} />
           </div>
-          <h1 className="text-4xl font-bold mb-3 tracking-tight">Insights</h1>
-          <p className="text-text-secondary text-lg">System performance and usage metrics.</p>
+          <h1 className="text-4xl font-bold mb-3 tracking-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>Insights</h1>
+          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>System performance and usage metrics.</p>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -43,18 +43,16 @@ const AnalyticsDashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, duration: 0.4 }}
             >
-              <div className="rounded-[24px] bg-bg-card border border-border-default p-6 card-shadow transition-all duration-300 hover:border-border-strong hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
-                style={{ minHeight: '140px' }}
-              >
-                <div className={`w-12 h-12 rounded-[14px] bg-gradient-to-br ${card.gradient} flex items-center justify-center mb-4 text-bg-app shadow-lg`}>
+              <div className="metric-card h-full">
+                <div className="metric-icon">
                   {card.icon}
                 </div>
-                <p className="text-[13px] text-text-muted mb-1.5 font-medium tracking-wide">{card.label}</p>
-                <p className="text-3xl font-bold text-text-primary tracking-tight">
+                <p className="metric-label">{card.label}</p>
+                <div className="metric-value">
                   {isLoading ? (
-                    <span className="inline-block w-16 h-8 skeleton" />
+                    <div className="w-16 h-8 skeleton" />
                   ) : card.value}
-                </p>
+                </div>
               </div>
             </motion.div>
           ))}

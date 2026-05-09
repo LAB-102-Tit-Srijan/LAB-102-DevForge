@@ -50,59 +50,60 @@ const ChatPanel = ({ videoId, onTimestampClick }) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="chat-panel border-0 rounded-none bg-transparent h-full">
       {/* Header */}
-      <div className="p-5 pb-0">
-        <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-coral" />
-          SherySense AI
-        </h2>
-        <p className="text-[13px] text-text-muted mt-0.5">Ask anything about this lecture</p>
+      <div className="chat-header">
+        <Sparkles className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+        <div>
+          <h2 className="chat-header-title">SherySense AI</h2>
+          <p className="chat-header-sub">Ask anything about this lecture</p>
+        </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-6">
+      <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-coral to-coral-light flex items-center justify-center mb-5 shadow-lg shadow-coral-glow">
-              <Sparkles className="w-8 h-8 text-bg-app" />
+            <div className="w-16 h-16 rounded-[20px] bg-[var(--accent-muted)] flex items-center justify-center mb-5">
+              <Sparkles className="w-8 h-8" style={{ color: 'var(--accent)' }} />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Ask anything about this lecture</h3>
-            <p className="text-text-secondary text-sm mb-6 max-w-xs">Get AI-powered answers grounded in the actual video content.</p>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Ask anything about this lecture</h3>
+            <p className="text-sm mb-6 max-w-xs" style={{ color: 'var(--text-secondary)' }}>Get AI-powered answers grounded in the actual video content.</p>
             <SuggestedPrompts onSelect={handleSend} />
           </div>
         )}
 
         {messages.map((msg, i) => (
           <div key={msg.id || i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`max-w-[85%] rounded-[20px] px-5 py-3.5 ${
-                msg.role === 'user'
-                  ? 'bg-gradient-to-r from-coral/20 to-coral-light/10 border border-border-strong text-text-primary rounded-br-lg'
-                  : 'bg-bg-card border border-border-default text-text-primary rounded-bl-lg'
-              }`}
-            >
+            <div className={msg.role === 'user' ? 'message-user' : 'message-ai'}>
               {msg.role === 'assistant' ? (
                 <div className="markdown-body">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content || ''}</ReactMarkdown>
-                  {msg.isStreaming && <span className="inline-block w-2 h-5 bg-coral animate-pulse ml-0.5 rounded-sm" />}
+                  {msg.isStreaming && <span className="inline-block w-2 h-5 bg-[var(--accent)] animate-pulse ml-0.5 rounded-sm" />}
                   {msg.timestamps?.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-border-default">
+                    <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t" style={{ borderColor: 'var(--border-muted)' }}>
                       {msg.timestamps.map((ts, j) => <TimestampLink key={j} timestamp={ts} onClick={() => onTimestampClick(ts.startSeconds)} />)}
                     </div>
                   )}
                 </div>
-              ) : <p className="text-sm leading-relaxed">{msg.content}</p>}
+              ) : <p>{msg.content}</p>}
             </div>
           </div>
         ))}
+        {isStreaming && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
+           <div className="typing-indicator">
+              <div className="typing-dot" />
+              <div className="typing-dot" />
+              <div className="typing-dot" />
+           </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-border-default">
+      <div className="p-4 border-t" style={{ borderColor: 'var(--border-muted)' }}>
         {messages.length > 0 && <SuggestedPrompts onSelect={handleSend} compact className="mb-3" />}
-        <div className="rounded-[20px] border border-border-default bg-bg-card p-3 flex items-end gap-3">
+        <div className="chat-input-area border-0 p-0 bg-transparent">
           <textarea
             ref={textareaRef}
             value={input}
@@ -111,13 +112,13 @@ const ChatPanel = ({ videoId, onTimestampClick }) => {
             placeholder="Ask about the lecture..."
             disabled={isStreaming}
             rows={1}
-            className="flex-1 bg-transparent text-text-primary placeholder-text-muted focus:outline-none disabled:opacity-40 text-sm resize-none leading-relaxed"
-            style={{ minHeight: '40px', maxHeight: '160px' }}
+            className="chat-input"
+            style={{ minHeight: '44px', maxHeight: '160px' }}
           />
           <button
             onClick={() => handleSend()}
             disabled={isStreaming || !input.trim()}
-            className="w-11 h-11 rounded-[14px] bg-gradient-to-r from-coral to-coral-light text-bg-app flex items-center justify-center transition-all duration-300 hover:shadow-[0_0_20px_rgba(245,158,139,0.3)] disabled:opacity-30 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+            className="send-btn"
             aria-label="Send message"
           >
             <Send className="w-4 h-4" />

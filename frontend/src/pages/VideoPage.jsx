@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import ReactPlayer from 'react-player';
-import { MessageSquare, BookOpen, HelpCircle, FileVideo, Upload as UploadIcon } from 'lucide-react';
+import { MessageSquare, BookOpen, HelpCircle, FileVideo, Upload as UploadIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import ChatPanel from '../components/chat/ChatPanel';
 import SummaryPanel from '../components/summary/SummaryPanel';
 import QuizPanel from '../components/quiz/QuizPanel';
@@ -17,6 +17,7 @@ const VideoPage = () => {
   const navigate = useNavigate();
   const playerRef = useRef(null);
   const [activeTab, setActiveTab] = useState('chat');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { setActiveVideo } = useChatStore();
 
   useEffect(() => { 
@@ -61,24 +62,50 @@ const VideoPage = () => {
     <div className="min-h-screen" style={{ paddingTop: '80px' }}>
       <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>
         
-        {/* Left Sidebar (250px approx, 20%) */}
-        <div className="w-[280px] flex-shrink-0 border-r border-border-default hidden md:block">
-          <VideoSidebar currentVideoId={videoId} />
-        </div>
+        {/* Left Sidebar (Collapsible) */}
+        <AnimatePresence initial={false}>
+          {isSidebarOpen && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 280, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="flex-shrink-0 border-r hidden md:block overflow-hidden"
+              style={{ borderColor: 'var(--border-muted)', background: 'var(--bg-app)' }}
+            >
+              <div className="w-[280px] h-full">
+                <VideoSidebar currentVideoId={videoId} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Right Content Area (Flexible) */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
           
+          {/* Global Toggle Button (visible when no video is selected) */}
+          {!videoId && (
+            <div className="absolute top-6 left-6 z-10">
+              <button 
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="p-2.5 rounded-[10px] bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-all cursor-pointer shadow-sm"
+                title={isSidebarOpen ? "Close Library" : "Open Library"}
+              >
+                {isSidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
+              </button>
+            </div>
+          )}
+
           {!videoId ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-bg-app">
-              <div className="w-20 h-20 rounded-[20px] bg-gradient-to-br from-coral/10 to-coral-light/10 flex items-center justify-center mb-6">
-                <FileVideo className="w-10 h-10 text-coral" />
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[var(--bg-app)]">
+              <div className="w-20 h-20 rounded-[20px] bg-[var(--accent-muted)] flex items-center justify-center mb-6">
+                <FileVideo className="w-10 h-10" style={{ color: 'var(--accent)' }} />
               </div>
-              <h2 className="text-2xl font-bold text-text-primary mb-2">Select a Video</h2>
-              <p className="text-text-secondary max-w-md mb-8">
+              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Select a Video</h2>
+              <p className="max-w-md mb-8" style={{ color: 'var(--text-secondary)' }}>
                 Choose a video from your library on the left to start asking questions, generating summaries, and creating quizzes.
               </p>
-              <Button onClick={() => navigate('/teacher')} className="flex items-center gap-2">
+              <Button onClick={() => navigate('/teacher')} className="flex items-center gap-2 btn-primary">
                 <UploadIcon className="w-4 h-4" /> Upload New Video
               </Button>
             </div>
@@ -86,20 +113,20 @@ const VideoPage = () => {
             <>
               {/* Center — Video Player */}
               <motion.div
-                className="lg:w-[60%] p-5 flex flex-col"
+                className="lg:w-[60%] p-5 flex flex-col overflow-y-auto custom-scrollbar"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <div className="rounded-[24px] bg-bg-card border border-border-default p-5 card-shadow flex-shrink-0">
-                  <div className="relative w-full aspect-video rounded-[16px] overflow-hidden bg-bg-app">
+                <div className="player-container">
+                  <div className="relative w-full h-full bg-black">
                     {isLoading ? (
-                      <div className="w-full h-full flex items-center justify-center text-text-muted">Loading player...</div>
+                      <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>Loading player...</div>
                     ) : !video?.sourceUrl && video?.sourceType === 'upload' ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 bg-bg-secondary/20">
-                        <div className="w-12 h-12 rounded-full border-2 border-coral border-t-transparent animate-spin mb-4" />
-                        <h3 className="text-text-primary font-medium">Uploading to Cloud storage...</h3>
-                        <p className="text-xs text-text-muted mt-2 max-w-[250px]">
+                      <div className="w-full h-full flex flex-col items-center justify-center text-center p-6" style={{ background: 'var(--bg-elevated)' }}>
+                        <div className="w-12 h-12 rounded-full border-2 border-t-transparent animate-spin mb-4" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
+                        <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>Uploading to Cloud storage...</h3>
+                        <p className="text-xs mt-2 max-w-[250px]" style={{ color: 'var(--text-muted)' }}>
                           We're moving your video to the cloud. The player will appear automatically in a few seconds.
                         </p>
                       </div>
@@ -128,48 +155,67 @@ const VideoPage = () => {
                     )}
                   </div>
                 </div>
-                <div className="mt-4 px-2">
-                  <h1 className="text-xl font-semibold text-text-primary tracking-tight">
-                    {video?.title || 'Lecture Video'}
-                  </h1>
-                  <p className="text-sm text-text-secondary mt-1.5 flex items-center gap-2">
+                
+                <div className="video-info">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                      className="p-2 rounded-[8px] bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-all cursor-pointer flex-shrink-0"
+                      title={isSidebarOpen ? "Close Library" : "Open Library"}
+                    >
+                      {isSidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+                    </button>
+                    <h1 className="video-title">
+                      {video?.title || 'Lecture Video'}
+                    </h1>
+                  </div>
+                  <div className="mt-2 ml-11">
                     {video?.processingStatus === 'ready' || video?.status === 'ready' ? (
-                      <span className="text-green-400 flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-400 pulse-ring" /> AI processing complete</span>
+                      <span className="video-status">AI processing complete</span>
                     ) : (
-                      <span className="text-coral flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-coral animate-pulse" /> AI is processing ({video?.processingStatus || video?.status})...</span>
+                      <span className="video-status" style={{ color: 'var(--accent)' }}>
+                        <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} /> 
+                        AI is processing ({video?.processingStatus || video?.status})...
+                      </span>
                     )}
-                  </p>
+                  </div>
                 </div>
               </motion.div>
 
               {/* Right — AI Panel */}
               <motion.div
-                className="lg:w-[40%] flex flex-col border-l border-border-default bg-bg-app"
+                className="lg:w-[40%] flex flex-col border-l"
+                style={{ borderColor: 'var(--border-muted)', background: 'var(--bg-base)' }}
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.4 }}
               >
                 {/* Tab Bar */}
-                <div className="flex gap-1 p-3 border-b border-border-default bg-bg-secondary/50">
-                  {tabs.map((tab) => {
-                    const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`
-                          flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-[14px] text-[13px] font-medium
-                          transition-all duration-300 cursor-pointer
-                          ${isActive
-                            ? 'bg-gradient-to-r from-coral to-coral-light text-bg-app shadow-lg'
-                            : 'text-text-muted hover:text-text-primary hover:bg-bg-card'
-                          }
-                        `}
-                      >
-                        {tab.icon}<span className="hidden sm:inline">{tab.label}</span>
-                      </button>
-                    );
-                  })}
+                <div className="p-4 border-b" style={{ borderColor: 'var(--border-muted)', background: 'var(--bg-app)' }}>
+                  <div className="tab-bar m-0">
+                    {tabs.map((tab) => {
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`tab-btn flex items-center justify-center gap-2 ${isActive ? 'active' : ''}`}
+                        >
+                          {isActive && (
+                            <motion.div
+                              layoutId="activeTabBg"
+                              className="tab-active-bg inset-0"
+                              transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                            />
+                          )}
+                          <span className="relative z-10 flex items-center gap-2">
+                            {tab.icon}
+                            <span className="hidden sm:inline">{tab.label}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Panel Content */}

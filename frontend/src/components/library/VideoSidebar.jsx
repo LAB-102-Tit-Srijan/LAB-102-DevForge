@@ -61,77 +61,73 @@ const VideoSidebar = ({ currentVideoId }) => {
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-bg-secondary/30 overflow-y-auto custom-scrollbar">
-      <div className="p-4 border-b border-border-default sticky top-0 bg-bg-app z-10">
-        <h2 className="text-base font-semibold text-text-primary flex items-center gap-2">
-          <FileVideo className="w-4 h-4 text-coral" /> Your Library
-        </h2>
-      </div>
+    <div className="video-sidebar">
+      <div className="sidebar-label">Your Library</div>
 
-      <div className="p-3 flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
         {videos?.length === 0 ? (
-          <p className="text-sm text-text-muted text-center mt-6">No videos uploaded yet.</p>
+          <p className="text-sm text-center mt-6" style={{ color: 'var(--text-muted)' }}>No videos uploaded yet.</p>
         ) : (
-          videos?.map((video) => (
-            <motion.div
-              key={video.videoId}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`
-                group flex gap-3 p-2 rounded-[14px] cursor-pointer transition-all duration-300
-                ${currentVideoId === video.videoId 
-                  ? 'bg-gradient-to-br from-bg-card to-bg-secondary border border-coral/20 shadow-lg' 
-                  : 'hover:bg-bg-card border border-transparent'}
-              `}
-              onClick={() => navigate(`/library/${video.videoId}`)}
-            >
-              <div className="relative w-24 h-16 rounded-[8px] overflow-hidden bg-bg-primary flex-shrink-0">
-                {video.thumbnailUrl ? (
-                  <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Film className="w-6 h-6 text-text-muted" />
-                  </div>
-                )}
-                {video.duration > 0 && (
-                  <div className="absolute bottom-1 right-1 bg-black/80 px-1 rounded text-[10px] font-medium text-white flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {Math.floor(video.duration / 60)}:{String(Math.floor(video.duration % 60)).padStart(2, '0')}
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                <div className="flex justify-between items-start gap-2">
-                  <h3 className="text-[13px] font-medium text-text-primary truncate">
-                    {video.title || 'Untitled Video'}
-                  </h3>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm('Delete this video?')) deleteMutation.mutate(video.videoId);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-text-muted hover:text-red-400 hover:bg-red-400/10 rounded-md transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                
-                <div className="flex items-center gap-2 text-[11px] font-medium mt-auto">
-                  {video.processingStatus === 'ready' || video.status === 'ready' ? (
-                    <span className="text-green-400 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-400" />Ready</span>
-                  ) : video.processingStatus === 'failed' || video.status === 'failed' ? (
-                    <span className="text-red-400 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-red-400" />Failed</span>
+          videos?.map((video) => {
+            const isActive = currentVideoId === video.videoId;
+            const status = video.processingStatus || video.status;
+            const isReady = status === 'ready';
+            const isFailed = status === 'failed';
+
+            return (
+              <motion.div
+                key={video.videoId}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`video-card group ${isActive ? 'active' : ''}`}
+                onClick={() => navigate(`/library/${video.videoId}`)}
+              >
+                <div className="relative w-24 h-16 rounded-[6px] overflow-hidden bg-black flex-shrink-0 border border-border-default">
+                  {video.thumbnailUrl ? (
+                    <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-coral flex items-center gap-1 animate-pulse">
-                      <div className="w-1.5 h-1.5 rounded-full bg-coral" />
-                      {video.processingStatus || video.status}
-                    </span>
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Film className="w-6 h-6" style={{ color: 'var(--text-muted)' }} />
+                    </div>
+                  )}
+                  {video.duration > 0 && (
+                    <div className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-medium text-white flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {Math.floor(video.duration / 60)}:{String(Math.floor(video.duration % 60)).padStart(2, '0')}
+                    </div>
                   )}
                 </div>
-              </div>
-            </motion.div>
-          ))
+                
+                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 h-16">
+                  <div className="flex justify-between items-start gap-2">
+                    <h3 className="text-[13px] font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                      {video.title || 'Untitled Video'}
+                    </h3>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm('Delete this video?')) deleteMutation.mutate(video.videoId);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded-md transition-all"
+                      style={{ color: 'var(--text-muted)', hover: { color: 'var(--error)' } }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 hover:text-[var(--error)]" />
+                    </button>
+                  </div>
+                  
+                  <div className="mt-auto flex items-center gap-2">
+                    {isReady ? (
+                      <span className="status-badge ready">Ready</span>
+                    ) : isFailed ? (
+                      <span className="status-badge" style={{ background: 'var(--accent-muted)', color: 'var(--error)', borderColor: 'rgba(190, 18, 60, 0.3)' }}>Failed</span>
+                    ) : (
+                      <span className="status-badge processing animate-pulse">{status}</span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })
         )}
       </div>
     </div>

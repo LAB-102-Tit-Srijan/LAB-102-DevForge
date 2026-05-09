@@ -1,10 +1,10 @@
 const variants = {
-  default: 'bg-bg-elevated text-text-secondary',
-  primary: 'bg-coral-muted text-coral border border-border-strong',
-  success: 'bg-success/15 text-success border border-success/25',
-  warning: 'bg-warning/15 text-warning border border-warning/25',
-  error: 'bg-error/15 text-error border border-error/25',
-  accent: 'bg-coral-muted text-coral border border-border-strong',
+  default: 'bg-[var(--bg-elevated)] text-[var(--text-secondary)]',
+  primary: 'bg-[var(--accent-muted)] text-[var(--accent)] border border-[var(--border-strong)]',
+  success: 'bg-[rgba(74,222,128,0.15)] text-[#4ADE80] border border-[rgba(74,222,128,0.25)]',
+  warning: 'bg-[rgba(250,204,21,0.15)] text-[#FACC15] border border-[rgba(250,204,21,0.25)]',
+  error: 'bg-[rgba(248,113,113,0.15)] text-[var(--error)] border border-[rgba(248,113,113,0.25)]',
+  accent: 'bg-[var(--accent-muted)] text-[var(--accent)] border border-[var(--border-strong)]',
 };
 
 const Badge = ({
