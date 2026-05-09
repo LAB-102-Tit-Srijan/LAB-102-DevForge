@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   Brain, Sparkles, MessageSquare, Clock, BookOpen,
-  Zap, ArrowRight, Play, FileText, HelpCircle
+  Zap, ArrowRight, Play, FileText, HelpCircle, Upload
 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { Card } from '../components/ui/Card';

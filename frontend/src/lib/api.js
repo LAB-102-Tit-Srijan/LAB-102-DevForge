@@ -21,6 +21,16 @@ export const getVideoStatus = (videoId) =>
 export const getVideo = (videoId) =>
   api.get(`/api/videos/${videoId}`);
 
+// Upload a video file (MP4, etc.)
+export const uploadVideoFile = (file) => {
+  const formData = new FormData();
+  formData.append('video', file);
+  return api.post('/api/videos/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 300000, // 5 min timeout for large uploads
+  });
+};
+
 // ── Chat API (uses fetch for SSE streaming) ──────────────
 export const sendChatMessage = async (data, onChunk, onDone) => {
   const baseUrl = import.meta.env.VITE_API_URL || '';

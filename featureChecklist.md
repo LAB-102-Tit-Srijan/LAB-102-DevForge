@@ -53,29 +53,30 @@
 ## 5. Video Ingestion Pipeline (Whisper-based)
 
 - [x] Accept YouTube URL
-- [ ] Accept uploaded MP4 file
+- [x] Accept uploaded MP4 file (multer + drag-and-drop UI)
 - [x] Validate URL
 - [x] Extract video ID
-- [ ] Download audio from YouTube using `yt-dlp`
-- [ ] Extract audio from uploaded MP4 using `ffmpeg`
-- [ ] Transcribe audio using Groq Whisper
-- [ ] Handle large audio files (>25MB) by splitting
-- [ ] Chunk transcript into semantic chunks
-- [ ] Preserve timestamps for each chunk (start + end)
-- [ ] Generate embeddings (ChromaDB built-in)
-- [ ] Store embeddings in ChromaDB
-- [ ] Store video metadata in MongoDB
-- [ ] Update video status (`queued → processing → transcribing → embedding → ready`)
-- [ ] Clean up temporary audio/video files after processing
+- [x] Download audio from YouTube using `yt-dlp`
+- [x] Extract audio from uploaded MP4 using `ffmpeg`
+- [x] Transcribe audio using Groq Whisper (whisper-large-v3-turbo)
+- [x] Handle large audio files (>25MB) by splitting into segments
+- [x] Chunk transcript into semantic chunks (~300 words)
+- [x] Preserve timestamps for each chunk (start + end)
+- [x] Generate embeddings (ChromaDB built-in MiniLM)
+- [x] Store embeddings in ChromaDB
+- [x] Store video metadata in MongoDB (needs MONGODB_URI)
+- [x] Update video status (`queued → processing → transcribing → embedding → ready`)
+- [x] Clean up temporary audio/video files after processing
 
 ---
 
 ## 6. Teacher Dashboard
 
 - [x] Input field for YouTube URL
-- [ ] File upload input for MP4
+- [x] File upload input for MP4 (drag-and-drop zone)
 - [x] Process Video button
-- [x] Processing status display
+- [x] Upload & Process button
+- [x] Processing status display with progress bar
 - [x] Error handling
 - [x] Automatic navigation to video page when ready
 
@@ -228,7 +229,7 @@
 
 ### Video
 - [x] POST `/api/videos/process`
-- [ ] POST `/api/videos/upload`
+- [x] POST `/api/videos/upload`
 - [x] GET `/api/videos/:id/status`
 - [x] GET `/api/videos/:id`
 
@@ -248,7 +249,7 @@
 
 ## 22. Testing
 
-- [ ] Transcript chunking tests (updated for new chunking.service)
+- [x] Transcript chunking tests (Whisper segment format)
 - [x] Cache tests
 - [x] Prompt formatting tests
 - [ ] API endpoint tests
@@ -275,8 +276,8 @@
 
 ## 25. Deployment
 
-- [x] Dockerfiles created
-- [ ] Docker Compose works (needs ffmpeg + yt-dlp in image)
+- [x] Dockerfiles created (with ffmpeg + yt-dlp)
+- [ ] Docker Compose works
 - [ ] Frontend deployable to Vercel
 - [ ] Backend deployable to Railway
 

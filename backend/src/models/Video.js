@@ -3,11 +3,11 @@ import mongoose from 'mongoose';
 const videoSchema = new mongoose.Schema({
   videoId: { type: String, required: true, unique: true, index: true },
   title: { type: String, default: '' },
-  youtubeUrl: { type: String, required: true },
+  youtubeUrl: { type: String, default: '' },
   transcript: { type: String, default: '' },
   status: {
     type: String,
-    enum: ['queued', 'processing', 'embedding', 'ready', 'failed'],
+    enum: ['queued', 'processing', 'transcribing', 'embedding', 'ready', 'failed'],
     default: 'queued',
   },
   duration: { type: Number, default: 0 },

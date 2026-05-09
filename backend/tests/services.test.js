@@ -1,14 +1,14 @@
 import { describe, test, expect } from '@jest/globals';
-import { chunkTranscript } from '../src/services/transcript.service.js';
+import { chunkTranscript } from '../src/services/chunking.service.js';
 
-describe('Transcript Chunking', () => {
-  test('should create chunks from transcript segments', () => {
+describe('Transcript Chunking (Whisper segments)', () => {
+  test('should create chunks from Whisper segments', () => {
     const segments = [];
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 50; i++) {
       segments.push({
-        text: `This is segment number ${i} with some words to fill the content properly`,
-        offset: i * 5000,
-        duration: 5000,
+        text: `This is segment number ${i} with some words to fill the content properly and add more context`,
+        start: i * 10,
+        end: (i + 1) * 10,
       });
     }
 
@@ -19,6 +19,7 @@ describe('Transcript Chunking', () => {
     expect(chunks[0]).toHaveProperty('startSeconds');
     expect(chunks[0]).toHaveProperty('endSeconds');
     expect(chunks[0]).toHaveProperty('startTimestamp');
+    expect(chunks[0]).toHaveProperty('endTimestamp');
     expect(chunks[0]).toHaveProperty('tokenCount');
   });
 
@@ -34,9 +35,9 @@ describe('Transcript Chunking', () => {
 
   test('should preserve timestamp ordering', () => {
     const segments = [
-      { text: 'First segment', offset: 0, duration: 3000 },
-      { text: 'Second segment', offset: 3000, duration: 3000 },
-      { text: 'Third segment', offset: 6000, duration: 3000 },
+      { text: 'First segment with some content', start: 0, end: 5 },
+      { text: 'Second segment with more content', start: 5, end: 10 },
+      { text: 'Third segment with even more', start: 10, end: 15 },
     ];
     const chunks = chunkTranscript(segments, 5);
     for (let i = 1; i < chunks.length; i++) {
@@ -44,18 +45,43 @@ describe('Transcript Chunking', () => {
     }
   });
 
-  test('should format timestamps correctly', () => {
+  test('should format timestamps correctly (mm:ss)', () => {
     const segments = [
-      { text: 'Content at 2 minutes 30 seconds into the video with enough words to make a chunk', offset: 150000, duration: 5000 },
+      { text: 'Content at 2 minutes 30 seconds into the video with enough words to fill', start: 150, end: 155 },
     ];
     const chunks = chunkTranscript(segments, 5);
     expect(chunks[0].startTimestamp).toBe('2:30');
+    expect(chunks[0].endTimestamp).toBe('2:35');
+  });
+
+  test('should include endTimestamp in each chunk', () => {
+    const segments = [
+      { text: 'Start of lecture', start: 0, end: 30 },
+      { text: 'Middle of lecture', start: 30, end: 60 },
+      { text: 'End of lecture', start: 60, end: 90 },
+    ];
+    const chunks = chunkTranscript(segments, 5);
+    chunks.forEach((chunk) => {
+      expect(chunk.endTimestamp).toBeDefined();
+      expect(chunk.endSeconds).toBeGreaterThanOrEqual(chunk.startSeconds);
+    });
+  });
+
+  test('should handle Whisper segment format (start/end as floats)', () => {
+    const segments = [
+      { text: 'Today we will learn about React hooks.', start: 0.0, end: 3.5 },
+      { text: 'useEffect runs after every render.', start: 3.5, end: 7.2 },
+      { text: 'It accepts a callback and a dependency array.', start: 7.2, end: 12.8 },
+    ];
+    const chunks = chunkTranscript(segments, 5);
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(chunks[0].startSeconds).toBe(0);
+    expect(chunks[0].text).toContain('React hooks');
   });
 });
 
 describe('Cache Key Generation', () => {
   test('should import cache functions', async () => {
-    // This test validates module structure
     const { cacheKey } = await import('../src/services/cache.service.js');
     expect(typeof cacheKey).toBe('function');
   });

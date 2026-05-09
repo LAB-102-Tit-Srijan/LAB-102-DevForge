@@ -1,7 +1,12 @@
+import dotenv from 'dotenv';
+dotenv.config({ path: '../.env' });
+
 import { Worker } from 'bullmq';
 import Redis from 'ioredis';
 import mongoose from 'mongoose';
-import { fetchTranscript, chunkTranscript } from '../services/transcript.service.js';
+import { downloadYoutubeAudio, extractAudio, cleanupTempFiles, getAudioDuration } from '../services/video-download.service.js';
+import { transcribeAudio } from '../services/transcription.service.js';
+import { chunkTranscript } from '../services/chunking.service.js';
 import { upsertChunks } from '../services/chroma.service.js';
 import Video from '../models/Video.js';
 import Analytics from '../models/Analytics.js';
@@ -11,10 +16,18 @@ import logger from '../utils/logger.js';
  * Video Processing Worker
  *
  * Runs as a separate process consuming BullMQ jobs.
- * Pipeline: Fetch transcript → Chunk → Embed → Store → Update status
+ * 
+ * Pipeline:
+ *   1. Download audio (yt-dlp for YouTube) or extract audio (ffmpeg for uploads)
+ *   2. Transcribe with Groq Whisper (auto-splits large files)
+ *   3. Chunk transcript into semantic groups
+ *   4. Store chunks + embeddings in ChromaDB
+ *   5. Update video status in MongoDB
+ *   6. Cleanup temporary files
  *
  * Scalability: Multiple worker instances can run in parallel
- * to handle increased processing load.
+ * to handle increased processing load. Each worker processes
+ * 2 concurrent jobs with rate limiting (5 jobs/min).
  */
 
 // Connect MongoDB
@@ -29,33 +42,52 @@ const connection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', 
 });
 
 const worker = new Worker('video-processing', async (job) => {
-  const { videoId, youtubeUrl } = job.data;
-  logger.info(`Processing video: ${videoId}`);
+  const { videoId, youtubeUrl, filePath, inputType } = job.data;
+  const tempFiles = []; // Track files for cleanup
+
+  logger.info(`Processing video: ${videoId} (type: ${inputType || 'youtube'})`);
 
   try {
-    // Step 1: Update status to processing
+    // ── Step 1: Update status to processing ──────────────
     await Video.findOneAndUpdate({ videoId }, { status: 'processing' });
-    await job.updateProgress(20);
+    await job.updateProgress(10);
 
-    // Step 2: Fetch transcript
-    logger.info(`Fetching transcript for ${videoId}...`);
-    const transcript = await fetchTranscript(videoId);
-    await job.updateProgress(40);
+    // ── Step 2: Get audio file ───────────────────────────
+    let audioPath;
+    if (inputType === 'upload' && filePath) {
+      logger.info(`Extracting audio from uploaded file: ${filePath}`);
+      audioPath = await extractAudio(filePath);
+      tempFiles.push(filePath); // Track uploaded file for cleanup
+    } else {
+      logger.info(`Downloading audio from YouTube: ${youtubeUrl}`);
+      audioPath = await downloadYoutubeAudio(youtubeUrl);
+    }
+    tempFiles.push(audioPath);
+    await job.updateProgress(30);
 
-    // Step 3: Chunk transcript
-    logger.info(`Chunking transcript...`);
-    const chunks = chunkTranscript(transcript);
+    // ── Step 3: Transcribe with Groq Whisper ─────────────
+    await Video.findOneAndUpdate({ videoId }, { status: 'transcribing' });
+    logger.info('Transcribing audio with Groq Whisper...');
+    const segments = await transcribeAudio(audioPath);
+
+    if (!segments || segments.length === 0) {
+      throw new Error('Transcription returned no segments');
+    }
+    logger.info(`Transcription complete: ${segments.length} segments`);
     await job.updateProgress(60);
 
-    // Step 4: Update status to embedding
-    await Video.findOneAndUpdate({ videoId }, { status: 'embedding' });
+    // ── Step 4: Chunk transcript ─────────────────────────
+    logger.info('Chunking transcript into semantic groups...');
+    const chunks = chunkTranscript(segments);
+    await job.updateProgress(70);
 
-    // Step 5: Store in ChromaDB (embeddings generated server-side)
+    // ── Step 5: Store in ChromaDB ────────────────────────
+    await Video.findOneAndUpdate({ videoId }, { status: 'embedding' });
     logger.info(`Storing ${chunks.length} chunks in ChromaDB...`);
     await upsertChunks(videoId, chunks);
     await job.updateProgress(90);
 
-    // Step 6: Update video record
+    // ── Step 6: Update video metadata ────────────────────
     const fullTranscript = chunks.map((c) => c.text).join(' ');
     const duration = chunks.length > 0
       ? chunks[chunks.length - 1].endSeconds
@@ -71,8 +103,12 @@ const worker = new Worker('video-processing', async (job) => {
     // Track analytics
     await Analytics.incrementVideos?.().catch(() => {});
 
-    logger.info(`✅ Video ${videoId} processed successfully (${chunks.length} chunks)`);
-    return { chunks: chunks.length, duration };
+    logger.info(`✅ Video ${videoId} processed successfully (${chunks.length} chunks, ${Math.round(duration)}s)`);
+
+    // ── Step 7: Cleanup temporary files ──────────────────
+    await cleanupTempFiles(tempFiles);
+
+    return { chunks: chunks.length, duration, segments: segments.length };
 
   } catch (err) {
     logger.error(`❌ Video processing failed for ${videoId}: ${err.message}`);
@@ -80,6 +116,9 @@ const worker = new Worker('video-processing', async (job) => {
       status: 'failed',
       errorMessage: err.message,
     }).catch(() => {});
+
+    // Cleanup even on failure
+    await cleanupTempFiles(tempFiles);
     throw err;
   }
 }, {
@@ -100,4 +139,4 @@ worker.on('error', (err) => {
   logger.error(`Worker error: ${err.message}`);
 });
 
-logger.info('🔧 Video processing worker started');
+logger.info('🔧 Video processing worker started (yt-dlp + Whisper pipeline)');

@@ -9,20 +9,24 @@ export const connectRedis = async () => {
     redis = new Redis(url, {
       maxRetriesPerRequest: null, // Required by BullMQ
       enableReadyCheck: false,
-      retryStrategy: (times) => Math.min(times * 50, 2000),
+      retryStrategy: (times) => {
+        if (times > 10) return null; // Stop retrying after 10 attempts
+        return Math.min(times * 200, 3000);
+      },
+      lazyConnect: true,
     });
     redis.on('connect', () => logger.info('✅ Redis connected'));
-    redis.on('error', (err) => logger.error(`Redis error: ${err.message}`));
+    redis.on('error', () => {}); // Suppress noisy error logs
+    await redis.connect().catch(() => logger.warn('⚠️ Redis unavailable — caching disabled'));
     return redis;
   } catch (err) {
-    logger.error(`Redis connection failed: ${err.message}`);
-    throw err;
+    logger.warn(`⚠️ Redis unavailable: ${err.message} — caching disabled`);
+    return null;
   }
 };
 
 export const getRedis = () => {
-  if (!redis) throw new Error('Redis not initialized');
-  return redis;
+  return redis; // May be null if Redis is unavailable
 };
 
 export default redis;

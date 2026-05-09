@@ -13,11 +13,11 @@
 ## Tech Stack
 - **Frontend**: React + Vite + Tailwind CSS v4 + Framer Motion + Zustand + React Query
 - **Backend**: Express.js + BullMQ + Redis + ChromaDB + MongoDB Atlas + Groq (Llama 3.3 70B)
-- **Transcription**: yt-dlp + ffmpeg + Groq Whisper (replaces youtube-transcript)
+- **Transcription**: yt-dlp + ffmpeg + Groq Whisper (whisper-large-v3-turbo)
 - **Infra**: Docker Compose (frontend, backend, worker, redis, chromadb)
 - **Language**: Plain JavaScript (JSX for frontend, JS with ES Modules for backend)
 
-## Architecture (Updated)
+## Architecture
 ```
 Teacher Uploads YouTube URL or MP4 File
         ↓
@@ -29,7 +29,7 @@ Teacher Uploads YouTube URL or MP4 File
         ↓
   yt-dlp (YouTube) or ffmpeg (MP4) → Audio extraction
         ↓
-  Groq Whisper Transcription (with segment timestamps)
+  Groq Whisper Transcription (segment-level timestamps)
         ↓
   Semantic Chunking (chunking.service.js)
         ↓
@@ -41,8 +41,8 @@ Teacher Uploads YouTube URL or MP4 File
 ```
 
 ## Credentials Status
-- [ ] GROQ_API_KEY — Not yet provided (needed for Whisper transcription + LLM)
-- [ ] MONGODB_URI — Not yet provided (needed for metadata persistence)
+- [ ] GROQ_API_KEY — Not yet provided (needed for Whisper + LLM)
+- [ ] MONGODB_URI — Not yet provided (needed for metadata)
 - [x] REDIS_URL — Runs in Docker (redis://redis:6379)
 - [x] CHROMA_URL — Runs in Docker (http://chromadb:8000)
 
@@ -50,53 +50,48 @@ Teacher Uploads YouTube URL or MP4 File
 
 ## Milestone Progress
 
-### Milestone 1-3: Project Setup + Backend Services + API Routes
-- **Status**: ✅ Complete
-- **Completed**: 2026-05-09T16:45:00+05:30
+### Milestone 1: Project Setup & Infrastructure
+- **Status**: ✅ Complete (pushed)
+- **Commit**: `feat(M1): project setup — React+Vite frontend, Express backend, Docker, CI`
 
-#### What was implemented:
-**Root Config:** .gitignore, .env.example, docker-compose.yml, README.md, CI workflow
-**Frontend:** 15+ components — Landing, Teacher Dashboard, Video Page, Analytics, Chat (SSE), Summary, Quiz
-**Backend:** Express server, 5 route groups, 5 controllers, 6 services, 3 prompt templates, BullMQ worker
-**Tests:** 9/9 passing (chunking, cache, prompts)
-**Build:** Frontend builds in 2.06s
+### Milestone 2: Backend Services Layer
+- **Status**: ✅ Complete (pushed)
+- **Commit**: `feat(M2): backend services — transcript, ChromaDB, Groq, cache, queue, prompts`
+
+### Milestone 3: API Routes, Controllers & Worker
+- **Status**: ✅ Complete (pushed)
+- **Commit**: `feat(M3): API routes, controllers, BullMQ worker, tests (9/9 passing)`
+
+### Milestone 4: Whisper Pipeline + AI Integration
+- **Status**: ✅ Code complete — awaiting credentials for end-to-end test
+- **Changes made**:
+  - Removed `youtube-transcript` dependency
+  - Added: `fluent-ffmpeg`, `ffmpeg-static`, `multer`, `fs-extra`
+  - Created: `video-download.service.js` (yt-dlp + ffmpeg)
+  - Created: `transcription.service.js` (Groq Whisper with auto-splitting)
+  - Created: `chunking.service.js` (semantic chunks with start+end timestamps)
+  - Deprecated: `transcript.service.js`
+  - Updated: `video.worker.js` (new pipeline)
+  - Updated: `video.controller.js` (added uploadVideo handler)
+  - Updated: `video.routes.js` (added multer + POST /upload)
+  - Updated: `Video.js` model (added 'transcribing' status, optional youtubeUrl)
+  - Updated: `Dockerfile` (ffmpeg + yt-dlp installed)
+  - Updated: `.env.example` (UPLOAD_DIR, TEMP_DIR)
+  - Updated: `TeacherDashboard.jsx` (dual mode: URL + file upload with drag-and-drop)
+  - Updated: `api.js` (uploadVideoFile function)
+  - Updated: `services.test.js` (11 tests, all passing)
+  - Updated: `README.md`
+
+### Tests:
+- ✅ Backend: 11/11 passing
+- ✅ Frontend build: 2.08s
 
 ---
 
-### Pipeline Change: youtube-transcript → yt-dlp + ffmpeg + Groq Whisper
-- **Status**: 📋 Plan approved, implementation pending
-- **Reason**: youtube-transcript relies on pre-existing subtitles. Many videos lack captions.
-- **New approach**: Download audio → Groq Whisper transcription → works on ANY video.
-
-#### Changes needed:
-1. Remove `youtube-transcript` dependency
-2. Add: `fluent-ffmpeg`, `ffmpeg-static`, `yt-dlp-wrap`, `multer`, `fs-extra`
-3. Create: `video-download.service.js`, `transcription.service.js`, `chunking.service.js`
-4. Delete: `transcript.service.js` (old)
-5. Update: worker, video controller, video routes, Dockerfile, .env.example
-6. Frontend: Add MP4 file upload to Teacher Dashboard
-
----
-
-### Milestone 4: AI Integration & Testing
-- **Status**: ⏳ Pending — Needs GROQ_API_KEY and MONGODB_URI
-- **Blocked on**: Pipeline change implementation + credentials
-
----
-
-## Key Decisions
-1. **Whisper over youtube-transcript**: Works on videos without subtitles, supports MP4 uploads
-2. ChromaDB's built-in embedding function (all-MiniLM-L6-v2) — no separate embedding API needed
-3. shadcn/ui components manually created in JSX
-4. Tailwind CSS v4 with @tailwindcss/vite plugin
-5. MongoDB Atlas external; Redis + ChromaDB in Docker
-6. Audio files split into segments for files >25MB (Groq Whisper limit)
+## Credentials Needed
+- **GROQ_API_KEY**: [VERIFIED] (used for both Whisper transcription and Llama 3.3 chat)
+- **MONGODB_URI**: [VERIFIED]
 
 ## Remaining Items
-- [ ] Implement new transcription pipeline (yt-dlp + ffmpeg + Whisper)
-- [ ] Add MP4 upload support (frontend + backend)
-- [ ] Update Dockerfile with ffmpeg + yt-dlp
-- [ ] Obtain GROQ_API_KEY
-- [ ] Obtain MONGODB_URI
 - [ ] Test docker compose up --build
 - [ ] End-to-end demo with real YouTube video

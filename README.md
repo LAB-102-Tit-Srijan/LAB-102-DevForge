@@ -7,20 +7,24 @@
 
 ## 🎯 Overview
 
-SheriSense transforms video lectures into intelligent study sessions. Teachers upload a YouTube URL, and the system processes the transcript into searchable embeddings. Students can then ask contextual questions, generate quizzes, create smart summaries, and jump to exact timestamps — all powered by AI.
+SheriSense transforms video lectures into intelligent study sessions. Teachers upload a YouTube URL or an MP4 file, and the system downloads/extracts the audio, transcribes it with Groq Whisper, and stores semantic embeddings in ChromaDB. Students can then ask contextual questions, generate quizzes, create smart summaries, and jump to exact timestamps — all powered by AI.
 
 ## 🏗️ Architecture
 
 ```
-Teacher Uploads Video URL
+Teacher Uploads YouTube URL or MP4 File
         ↓
-  Express API
+  Express API (+ multer for file uploads)
         ↓
   BullMQ Job Queue
         ↓
   Worker Process
         ↓
-  YouTube Transcript API → Chunking → ChromaDB (Embeddings)
+  yt-dlp (YouTube) or ffmpeg (MP4) → Audio Extraction
+        ↓
+  Groq Whisper Transcription (segment timestamps)
+        ↓
+  Semantic Chunking → ChromaDB Embeddings
         ↓
   Metadata → MongoDB Atlas
 
@@ -37,6 +41,8 @@ Student Query
 
 ## ✨ Features
 
+- **Whisper Transcription** — Works on ANY video, even without subtitles
+- **Dual Input** — YouTube URL or direct MP4 upload
 - **Contextual Q&A** — RAG-powered answers grounded in lecture content
 - **Jump-to-Moment** — Clickable timestamps that seek the video player
 - **Smart Summaries** — Last 5 min, short, normal, or detailed modes
@@ -52,8 +58,9 @@ Student Query
 | Layer | Technologies |
 |-------|-------------|
 | Frontend | React, Vite, Tailwind CSS v4, Framer Motion, Zustand, React Query |
-| Backend | Express.js, BullMQ, Zod, Pino |
-| AI | Groq (Llama 3.3 70B), ChromaDB (MiniLM embeddings) |
+| Backend | Express.js, BullMQ, Zod, Pino, Multer |
+| AI | Groq Whisper (transcription), Groq Llama 3.3 70B (LLM), ChromaDB (MiniLM embeddings) |
+| Audio | yt-dlp (YouTube download), ffmpeg (audio extraction) |
 | Data | MongoDB Atlas, Redis |
 | Infra | Docker Compose, GitHub Actions CI |
 
@@ -90,6 +97,9 @@ Services:
 ### 3. Local Development (without Docker)
 
 ```bash
+# Prerequisites: install yt-dlp
+pip install yt-dlp
+
 # Terminal 1 — Backend
 cd backend && npm install && npm run dev
 
@@ -104,9 +114,10 @@ cd frontend && npm install && npm run dev
 
 ### Teacher
 1. Open http://localhost:3000/teacher
-2. Paste a YouTube lecture URL
-3. Click "Process" — watch status: queued → processing → embedding → ready
-4. Redirected to video page when ready
+2. **Option A**: Paste a YouTube lecture URL → click "Process"
+3. **Option B**: Upload an MP4 file → click "Upload & Process"
+4. Watch status: queued → processing → transcribing → embedding → ready
+5. Redirected to video page when ready
 
 ### Student
 1. Open video page
@@ -121,11 +132,13 @@ cd frontend && npm install && npm run dev
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `GROQ_API_KEY` | Groq API key for LLM | Yes |
+| `GROQ_API_KEY` | Groq API key (LLM + Whisper) | Yes |
 | `MONGODB_URI` | MongoDB Atlas connection string | Yes |
 | `REDIS_URL` | Redis connection URL | No (default: redis://redis:6379) |
 | `CHROMA_URL` | ChromaDB URL | No (default: http://chromadb:8000) |
 | `PORT` | Backend server port | No (default: 5000) |
+| `UPLOAD_DIR` | Directory for uploaded files | No (default: ./uploads) |
+| `TEMP_DIR` | Directory for temp audio files | No (default: ./temp) |
 | `VITE_API_URL` | Frontend API base URL | No (default: http://localhost:5000) |
 
 ## 🔮 Future Improvements
