@@ -35,12 +35,19 @@ export async function downloadYoutubeAudio(url) {
   const outputTemplate = path.join(TEMP_DIR, `${filename}.%(ext)s`);
 
   try {
-    // Download best audio, convert to mp3 for consistent format
-    // --no-playlist: don't download playlists
-    // -x: extract audio only
-    // --audio-format mp3: convert to mp3
-    // --audio-quality 3: decent quality, smaller file size (~128kbps)
-    const cmd = `yt-dlp --no-playlist -x --audio-format mp3 --audio-quality 3 -o "${outputTemplate}" "${url}"`;
+    // Optimized yt-dlp command for modern YouTube challenges:
+    // -f "ba": best audio
+    // --extractor-args: use mobile/web clients to bypass "n-challenge"
+    // --no-check-certificates: avoid SSL issues in some environments
+    let cmd = `yt-dlp --no-playlist -f "ba" -x --audio-format mp3 --audio-quality 3 --no-check-certificates --extractor-args "youtube:player_client=android_web,web" -o "${outputTemplate}" "${url}"`;
+
+    // Check for cookies file (helps bypass YouTube bot detection/429)
+    const cookiesPath = path.resolve(process.cwd(), 'cookies.txt');
+    if (await fs.pathExists(cookiesPath)) {
+      cmd += ` --cookies "${cookiesPath}"`;
+      logger.info('Using cookies.txt for YouTube download');
+    }
+
     logger.info(`Downloading YouTube audio: ${url}`);
 
     const { stdout, stderr } = await execAsync(cmd, { timeout: 300000 }); // 5 min timeout

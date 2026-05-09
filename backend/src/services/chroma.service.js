@@ -1,5 +1,8 @@
+import { DefaultEmbeddingFunction } from 'chromadb';
 import { getChromaClient } from '../config/chroma.js';
 import logger from '../utils/logger.js';
+
+const embedder = new DefaultEmbeddingFunction();
 
 /**
  * Upsert transcript chunks into ChromaDB.
@@ -18,10 +21,11 @@ export async function upsertChunks(videoId, chunks) {
   const client = getChromaClient();
   const collectionName = `video_${videoId.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
 
-  // Get or create collection (uses default embedding function)
+  // Get or create collection with explicit embedder
   const collection = await client.getOrCreateCollection({
     name: collectionName,
     metadata: { 'hnsw:space': 'cosine' },
+    embeddingFunction: embedder,
   });
 
   // Batch upsert for efficiency
@@ -58,7 +62,10 @@ export async function searchChunks(videoId, query, topK = 5) {
   const collectionName = `video_${videoId.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
 
   try {
-    const collection = await client.getCollection({ name: collectionName });
+    const collection = await client.getCollection({
+      name: collectionName,
+      embeddingFunction: embedder,
+    });
     const results = await collection.query({
       queryTexts: [query],
       nResults: topK,

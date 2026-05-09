@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   # ── Frontend (React + Vite) ──────────────────────────
@@ -25,6 +24,12 @@ services:
       - "5000:5000"
     env_file:
       - .env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/cookies.txt:/app/cookies.txt
+      - uploads_data:/app/uploads
+      - temp_data:/app/temp
     depends_on:
       redis:
         condition: service_healthy
@@ -32,6 +37,9 @@ services:
         condition: service_healthy
     networks:
       - sherisense
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - CHROMA_URL=http://chromadb:8000
     restart: unless-stopped
 
   # ── Background Worker (BullMQ) ──────────────────────
@@ -42,6 +50,12 @@ services:
     command: node src/workers/video.worker.js
     env_file:
       - .env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/cookies.txt:/app/cookies.txt
+      - uploads_data:/app/uploads
+      - temp_data:/app/temp
     depends_on:
       redis:
         condition: service_healthy
@@ -49,6 +63,9 @@ services:
         condition: service_healthy
     networks:
       - sherisense
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - CHROMA_URL=http://chromadb:8000
     restart: unless-stopped
 
   # ── Redis (Cache + Job Queue) ───────────────────────
@@ -91,6 +108,10 @@ volumes:
   redis_data:
     driver: local
   chroma_data:
+    driver: local
+  uploads_data:
+    driver: local
+  temp_data:
     driver: local
 
 # ── Networks ────────────────────────────────────────────

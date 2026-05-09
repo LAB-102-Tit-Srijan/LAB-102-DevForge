@@ -1,21 +1,25 @@
-FROM node:20-alpine
+FROM node:20-slim
 
-# Install system dependencies for audio processing
-# ffmpeg: audio extraction and conversion
-# yt-dlp: YouTube audio download (installed via pip)
-# python3/pip: required for yt-dlp installation
+# Install system dependencies
+# ffmpeg: audio extraction
+# python3/pip: for yt-dlp
 # curl: health checks
-RUN apk add --no-cache ffmpeg python3 py3-pip curl \
-    && pip3 install --break-system-packages yt-dlp
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    python3 \
+    python3-pip \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install yt-dlp
+RUN pip3 install --break-system-packages -U yt-dlp
 
 WORKDIR /app
 
-# Create directories for uploads and temp files
-RUN mkdir -p uploads temp
-
 # Install Node.js dependencies
 COPY package*.json ./
-RUN npm ci --only=production
+# Install the missing embedding dependency and the rest
+RUN npm install chromadb-default-embed && npm ci --only=production
 
 # Copy source code
 COPY . .
