@@ -39,7 +39,16 @@ if (mongoUri) {
 // Redis connection for BullMQ
 const connection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
   maxRetriesPerRequest: null,
+  retryStrategy: (times) => {
+    if (times > 10) {
+      logger.warn('⚠️ Redis is unavailable. BullMQ worker cannot process jobs.');
+      return null; // Stop retrying after 10 attempts
+    }
+    return Math.min(times * 200, 3000);
+  },
 });
+
+connection.on('error', () => {}); // Suppress noisy low-level redis errors
 
 const worker = new Worker('video-processing', async (job) => {
   const { videoId, youtubeUrl, filePath, inputType } = job.data;
@@ -136,7 +145,7 @@ worker.on('failed', (job, err) => {
 });
 
 worker.on('error', (err) => {
-  logger.error(`Worker error: ${err.message}`);
+  logger.error(`Worker error: ${err.message || err}`);
 });
 
 logger.info('🔧 Video processing worker started (yt-dlp + Whisper pipeline)');
