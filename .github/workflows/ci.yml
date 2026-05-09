@@ -1,0 +1,71 @@
+name: SheriSense CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Frontend CI ────────────────────────────────────────
+  frontend:
+    name: Frontend — Lint & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: http://localhost:5000
+
+  # ── Backend CI ─────────────────────────────────────────
+  backend:
+    name: Backend — Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+          REDIS_URL: redis://localhost:6379
+          CHROMA_URL: http://localhost:8000
+          PORT: 5000

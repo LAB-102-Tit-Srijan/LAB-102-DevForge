@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # ── Frontend (React + Vite) ──────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - sherisense
+    restart: unless-stopped
+
+  # ── Backend API (Express.js) ─────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    networks:
+      - sherisense
+    restart: unless-stopped
+
+  # ── Background Worker (BullMQ) ──────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: node src/workers/video.worker.js
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    networks:
+      - sherisense
+    restart: unless-stopped
+
+  # ── Redis (Cache + Job Queue) ───────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - sherisense
+    restart: unless-stopped
+
+  # ── ChromaDB (Vector Database) ──────────────────────
+  chromadb:
+    image: chromadb/chroma:0.6.3
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - ANONYMIZED_TELEMETRY=false
+      - IS_PERSISTENT=TRUE
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - sherisense
+    restart: unless-stopped
+
+# ── Volumes ─────────────────────────────────────────────
+volumes:
+  redis_data:
+    driver: local
+  chroma_data:
+    driver: local
+
+# ── Networks ────────────────────────────────────────────
+networks:
+  sherisense:
+    driver: bridge
