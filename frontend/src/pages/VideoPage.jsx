@@ -20,8 +20,8 @@ const VideoPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { setActiveVideo } = useChatStore();
 
-  useEffect(() => { 
-    setActiveVideo(videoId || null); 
+  useEffect(() => {
+    setActiveVideo(videoId || null);
   }, [videoId, setActiveVideo]);
 
   const { data: video, isLoading, error } = useQuery({
@@ -47,7 +47,7 @@ const VideoPage = () => {
         playerRef.current.seekTo(seconds, 'seconds'); // ReactPlayer
       } else {
         playerRef.current.currentTime = seconds; // Native video
-        playerRef.current.play().catch(() => {});
+        playerRef.current.play().catch(() => { });
       }
     }
   }, []);
@@ -61,7 +61,7 @@ const VideoPage = () => {
   return (
     <div className="min-h-screen" style={{ paddingTop: '80px' }}>
       <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>
-        
+
         {/* Left Sidebar (Collapsible) */}
         <AnimatePresence initial={false}>
           {isSidebarOpen && (
@@ -82,11 +82,11 @@ const VideoPage = () => {
 
         {/* Right Content Area (Flexible) */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-          
+
           {/* Global Toggle Button (visible when no video is selected) */}
           {!videoId && (
             <div className="absolute top-6 left-6 z-10">
-              <button 
+              <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 className="p-2.5 rounded-[10px] bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-all cursor-pointer shadow-sm"
                 title={isSidebarOpen ? "Close Library" : "Open Library"}
@@ -147,7 +147,7 @@ const VideoPage = () => {
                         controls
                         playsinline
                         pip
-                        config={{ 
+                        config={{
                           youtube: { playerVars: { modestbranding: 1, rel: 0 } },
                           file: { attributes: { controlsList: 'nodownload' } }
                         }}
@@ -155,10 +155,10 @@ const VideoPage = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="video-info">
                   <div className="flex items-center gap-3">
-                    <button 
+                    <button
                       onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                       className="p-2 rounded-[8px] bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-all cursor-pointer flex-shrink-0"
                       title={isSidebarOpen ? "Close Library" : "Open Library"}
@@ -174,7 +174,7 @@ const VideoPage = () => {
                       <span className="video-status">AI processing complete</span>
                     ) : (
                       <span className="video-status" style={{ color: 'var(--accent)' }}>
-                        <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} /> 
+                        <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
                         AI is processing ({video?.processingStatus || video?.status})...
                       </span>
                     )}
