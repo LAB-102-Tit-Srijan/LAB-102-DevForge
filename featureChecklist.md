@@ -295,6 +295,18 @@
 
 ---
 
+## 27. Multi-Video + Cloudinary Upgrade
+
+- [x] Cloudinary integrated for video storage
+- [x] Video schema updated for multi-video support
+- [x] Backend routes added for GET /videos and DELETE /videos/:id
+- [x] Worker deletes files from Cloudinary and ChromaDB on video deletion
+- [x] Frontend features a Video Library Sidebar
+- [x] AI Chat, Summary, and Quiz operations strictly scoped to `videoId`
+- [x] Uploads redirect to the new `/library/:videoId` route
+
+---
+
 # Final Completion Criteria
 
 The project is complete only when:

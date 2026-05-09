@@ -2,6 +2,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs-extra';
+import { pipeline } from 'stream/promises';
+import { createWriteStream } from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegStatic from 'ffmpeg-static';
 import logger from '../utils/logger.js';
@@ -11,6 +13,18 @@ const execAsync = promisify(exec);
 // Use bundled ffmpeg binary for local dev; Docker image has system ffmpeg
 if (ffmpegStatic) {
   ffmpeg.setFfmpegPath(ffmpegStatic);
+}
+
+/**
+ * Downloads a video from an HTTP URL to a local temporary file.
+ */
+export async function downloadHttpVideo(url) {
+  const outputPath = path.join(TEMP_DIR, `dl_${Date.now()}.mp4`);
+  logger.info(`Downloading remote video to local storage: ${url}`);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch video: ${res.statusText}`);
+  await pipeline(res.body, createWriteStream(outputPath));
+  return outputPath;
 }
 
 const TEMP_DIR = process.env.TEMP_DIR || './temp';

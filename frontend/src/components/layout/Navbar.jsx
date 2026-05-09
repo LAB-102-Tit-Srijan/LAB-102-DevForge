@@ -1,12 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sparkles, Upload, BarChart3 } from 'lucide-react';
+import { Sparkles, Upload, BarChart3, FileVideo } from 'lucide-react';
 
 const Navbar = () => {
   const location = useLocation();
 
   const navLinks = [
     { path: '/', label: 'Home', icon: <Sparkles className="w-4 h-4" /> },
+    { path: '/library', label: 'Library', icon: <FileVideo className="w-4 h-4" /> },
     { path: '/teacher', label: 'Upload', icon: <Upload className="w-4 h-4" /> },
     { path: '/analytics', label: 'Insights', icon: <BarChart3 className="w-4 h-4" /> },
   ];

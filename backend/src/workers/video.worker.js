@@ -4,13 +4,15 @@ dotenv.config({ path: '../.env' });
 import { Worker } from 'bullmq';
 import Redis from 'ioredis';
 import mongoose from 'mongoose';
-import { downloadYoutubeAudio, extractAudio, cleanupTempFiles, getAudioDuration } from '../services/video-download.service.js';
+import { resolve } from 'path';
+import { downloadYoutubeAudio, extractAudio, cleanupTempFiles, getAudioDuration, downloadHttpVideo } from '../services/video-download.service.js';
 import { transcribeAudio } from '../services/transcription.service.js';
 import { chunkTranscript } from '../services/chunking.service.js';
 import { upsertChunks } from '../services/chroma.service.js';
 import Video from '../models/Video.js';
 import Analytics from '../models/Analytics.js';
 import logger from '../utils/logger.js';
+import cloudinary from '../config/cloudinary.js';
 
 /**
  * Video Processing Worker
@@ -58,15 +60,64 @@ const worker = new Worker('video-processing', async (job) => {
 
   try {
     // ── Step 1: Update status to processing ──────────────
-    await Video.findOneAndUpdate({ videoId }, { status: 'processing' });
+    await Video.findOneAndUpdate({ videoId }, { status: 'processing', processingStatus: 'processing' });
     await job.updateProgress(10);
+
+    // ── Step 1.5: Upload to Cloudinary (if needed) ────────
+    let finalCloudinaryUrl = null;
+    let finalPublicId = null;
+
+    if (inputType === 'upload' && filePath && !filePath.startsWith('http')) {
+      // Resolve to absolute path so Cloudinary SDK can find the file regardless of CWD
+      const absoluteFilePath = resolve(process.cwd(), filePath);
+      logger.info(`Uploading to Cloudinary (absolute path): ${absoluteFilePath}`);
+
+      // NOTE: upload_large returns a stream when called with a local file path,
+      // not a Promise. We must use the explicit callback pattern to get the result.
+      const cloudinaryResult = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_large(
+          absoluteFilePath,
+          {
+            resource_type: 'video',
+            folder: 'sherysense/videos',
+            chunk_size: 6000000, // 6MB chunks
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+      });
+
+      if (!cloudinaryResult?.secure_url) {
+        throw new Error(`Cloudinary upload returned no URL. Result: ${JSON.stringify(cloudinaryResult)}`);
+      }
+
+      finalCloudinaryUrl = cloudinaryResult.secure_url;
+      finalPublicId = cloudinaryResult.public_id;
+      
+      // Update DB with Cloudinary info
+      await Video.findOneAndUpdate({ videoId }, {
+        sourceUrl: finalCloudinaryUrl,
+        cloudinaryUrl: finalCloudinaryUrl,
+        cloudinaryPublicId: finalPublicId
+      });
+      logger.info(`✅ Cloudinary upload complete: ${finalCloudinaryUrl}`);
+    }
 
     // ── Step 2: Get audio file ───────────────────────────
     let audioPath;
     if (inputType === 'upload' && filePath) {
-      logger.info(`Extracting audio from uploaded file: ${filePath}`);
-      audioPath = await extractAudio(filePath);
-      // We do NOT add filePath to tempFiles here because we want to keep it if the job retries
+      let localVideoPath = filePath;
+      // If it's a remote URL (Cloudinary backward compat), download it
+      if (filePath.startsWith('http')) {
+        logger.info(`Downloading remote Cloudinary video to local temp folder...`);
+        localVideoPath = await downloadHttpVideo(filePath);
+        tempFiles.push(localVideoPath); 
+      }
+      logger.info(`Extracting audio from local file: ${localVideoPath}`);
+      audioPath = await extractAudio(localVideoPath);
+      // We do NOT add the original Cloudinary URL to tempFiles yet.
     } else {
       logger.info(`Downloading audio from YouTube: ${youtubeUrl}`);
       audioPath = await downloadYoutubeAudio(youtubeUrl);
@@ -75,7 +126,7 @@ const worker = new Worker('video-processing', async (job) => {
     await job.updateProgress(30);
 
     // ── Step 3: Transcribe with Groq Whisper ─────────────
-    await Video.findOneAndUpdate({ videoId }, { status: 'transcribing' });
+    await Video.findOneAndUpdate({ videoId }, { status: 'transcribing', processingStatus: 'transcribing' });
     logger.info('Transcribing audio with Groq Whisper...');
     const segments = await transcribeAudio(audioPath);
 
@@ -91,12 +142,11 @@ const worker = new Worker('video-processing', async (job) => {
     await job.updateProgress(70);
 
     // ── Step 5: Store in ChromaDB ────────────────────────
-    await Video.findOneAndUpdate({ videoId }, { status: 'embedding' });
+    await Video.findOneAndUpdate({ videoId }, { status: 'embedding', processingStatus: 'embedding' });
     logger.info(`Storing ${chunks.length} chunks in ChromaDB...`);
     await upsertChunks(videoId, chunks);
     await job.updateProgress(90);
 
-    // ── Step 6: Update video metadata ────────────────────
     const fullTranscript = chunks.map((c) => c.text).join(' ');
     const duration = chunks.length > 0
       ? chunks[chunks.length - 1].endSeconds
@@ -104,7 +154,14 @@ const worker = new Worker('video-processing', async (job) => {
 
     await Video.findOneAndUpdate({ videoId }, {
       status: 'ready',
+      processingStatus: 'ready',
       transcript: fullTranscript.slice(0, 10000), // Store first 10k chars
+      chunks: chunks.map(c => ({
+        text: c.text,
+        startTime: c.startSeconds,
+        endTime: c.endSeconds,
+        embeddingId: c.chunkId
+      })),
       chunkCount: chunks.length,
       duration,
     });
@@ -126,6 +183,7 @@ const worker = new Worker('video-processing', async (job) => {
     logger.error(`❌ Video processing failed for ${videoId}: ${err.message}`);
     await Video.findOneAndUpdate({ videoId }, {
       status: 'failed',
+      processingStatus: 'failed',
       errorMessage: err.message,
     }).catch(() => {});
 

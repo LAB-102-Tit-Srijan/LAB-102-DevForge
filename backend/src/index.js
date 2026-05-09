@@ -33,11 +33,9 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// ── Body Parsing ─────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// ── Request Logging ──────────────────────────────────────
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
@@ -51,19 +49,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Routes ───────────────────────────────────────────────
 app.use('/api/videos', videoRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/summary', summaryRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// ── Health Check ─────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ── Error Handler ────────────────────────────────────────
 app.use((err, req, res, next) => {
   logger.error({ err: err.message, stack: err.stack });
   res.status(err.status || 500).json({
@@ -71,7 +66,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ── Start Server ─────────────────────────────────────────
 const start = async () => {
   try {
     await connectDB();

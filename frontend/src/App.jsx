@@ -28,7 +28,9 @@ function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/teacher" element={<TeacherDashboard />} />
-              <Route path="/video/:videoId" element={<VideoPage />} />
+              <Route path="/library" element={<VideoPage />} />
+              <Route path="/library/:videoId" element={<VideoPage />} />
+              <Route path="/video/:videoId" element={<VideoPage />} /> {/* Backward compatibility */}
               <Route path="/analytics" element={<AnalyticsDashboard />} />
             </Routes>
           </AnimatePresence>

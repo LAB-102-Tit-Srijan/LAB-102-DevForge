@@ -21,6 +21,12 @@ export const getVideoStatus = (videoId) =>
 export const getVideo = (videoId) =>
   api.get(`/api/videos/${videoId}`);
 
+export const getVideos = () =>
+  api.get('/api/videos');
+
+export const deleteVideo = (videoId) =>
+  api.delete(`/api/videos/${videoId}`);
+
 // Upload a video file (MP4, etc.)
 export const uploadVideoFile = (file) => {
   const formData = new FormData();

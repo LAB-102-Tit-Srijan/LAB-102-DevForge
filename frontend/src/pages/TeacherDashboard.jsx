@@ -58,7 +58,7 @@ const TeacherDashboard = () => {
         setStatus(data.status);
         if (data.status === 'ready') {
           toast.success('Video processed successfully!');
-          setTimeout(() => navigate(`/video/${id}`), 1500);
+          setTimeout(() => navigate(`/library/${id}`), 1500);
           return;
         }
         if (data.status === 'failed') {

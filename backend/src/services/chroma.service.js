@@ -69,6 +69,7 @@ export async function searchChunks(videoId, query, topK = 5) {
     const results = await collection.query({
       queryTexts: [query],
       nResults: topK,
+      where: { videoId }
     });
 
     if (!results.documents?.[0]) return [];
@@ -95,7 +96,9 @@ export async function getAllChunks(videoId) {
 
   try {
     const collection = await client.getCollection({ name: collectionName });
-    const results = await collection.get();
+    const results = await collection.get({
+      where: { videoId }
+    });
 
     if (!results.documents) return [];
 
@@ -106,5 +109,20 @@ export async function getAllChunks(videoId) {
   } catch (err) {
     logger.error(`ChromaDB getAllChunks failed: ${err.message}`);
     return [];
+  }
+}
+
+/**
+ * Delete a video's collection from ChromaDB.
+ * @param {string} videoId 
+ */
+export async function deleteVideoChunks(videoId) {
+  const client = getChromaClient();
+  const collectionName = `video_${videoId.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+  try {
+    await client.deleteCollection({ name: collectionName });
+    logger.info(`Deleted ChromaDB collection: ${collectionName}`);
+  } catch (err) {
+    logger.warn(`Could not delete ChromaDB collection ${collectionName}: ${err.message}`);
   }
 }
