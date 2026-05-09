@@ -1,51 +1,71 @@
 @import "tailwindcss";
 
-/* ── Custom Theme Variables ────────────────────────────── */
+/* ── Design System ─────────────────────────────────────── */
 @theme {
-  --color-primary: #6366f1;
-  --color-primary-hover: #818cf8;
-  --color-primary-dark: #4f46e5;
-  --color-accent: #06b6d4;
-  --color-accent-hover: #22d3ee;
-  --color-surface: #0f1117;
-  --color-surface-elevated: #1a1d2e;
-  --color-surface-overlay: #252840;
-  --color-border-subtle: #2a2d3e;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  /* Background Colors */
+  --color-bg-app: #070B14;
+  --color-bg-secondary: #0B1220;
+  --color-bg-card: #111827;
+  --color-bg-input: rgba(17, 24, 39, 0.9);
+  --color-bg-elevated: #1A1F2E;
 
+  /* Accent Colors */
+  --color-coral: #F59E8B;
+  --color-coral-hover: #FFB6A4;
+  --color-coral-light: #FFC1B2;
+  --color-coral-muted: rgba(245, 158, 139, 0.15);
+  --color-coral-glow: rgba(245, 158, 139, 0.25);
+
+  /* Legacy aliases for components that still use them */
+  --color-primary: #F59E8B;
+  --color-primary-hover: #FFB6A4;
+  --color-accent: #F59E8B;
+  --color-accent-hover: #FFB6A4;
+
+  /* Text Colors */
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #A1A1AA;
+  --color-text-muted: #71717A;
+
+  /* Borders */
+  --color-border-default: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(245, 158, 139, 0.25);
+
+  /* Status Colors */
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-error: #F87171;
+
+  /* Surfaces — keep for Tailwind class compat */
+  --color-surface: #070B14;
+  --color-surface-elevated: #111827;
+  --color-surface-overlay: #1A1F2E;
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+
+  /* Font */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* ── Base Styles ───────────────────────────────────────── */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* ── Base ──────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-surface);
+  background-color: var(--color-bg-app);
   color: var(--color-text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
 }
 
 /* ── Scrollbar ─────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -53,49 +73,65 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-subtle);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* ── Glassmorphism Utility ─────────────────────────────── */
+/* ── Glass ─────────────────────────────────────────────── */
 .glass {
-  background: rgba(26, 29, 46, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-default);
 }
 
 .glass-strong {
-  background: rgba(26, 29, 46, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid var(--color-border-default);
 }
 
-/* ── Gradient Text Utility ─────────────────────────────── */
+/* ── Gradient Text ─────────────────────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 50%, #818cf8 100%);
+  background: linear-gradient(135deg, #F59E8B 0%, #FFC1B2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* ── Glow Effects ──────────────────────────────────────── */
+.gradient-text-hero {
+  background: linear-gradient(135deg, #F59E8B 0%, #FFC1B2 50%, #F59E8B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glow ──────────────────────────────────────────────── */
+.glow-coral {
+  box-shadow: 0 0 30px rgba(245, 158, 139, 0.25);
+}
+
 .glow-primary {
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3),
-              0 0 60px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 30px rgba(245, 158, 139, 0.25);
 }
 
-.glow-accent {
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3),
-              0 0 60px rgba(6, 182, 212, 0.1);
+/* ── Card Shadow ───────────────────────────────────────── */
+.card-shadow {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
-/* ── Skeleton Animation ────────────────────────────────── */
+/* ── Dot Pattern ───────────────────────────────────────── */
+.dot-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ── Skeleton ──────────────────────────────────────────── */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -104,13 +140,13 @@ body {
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--color-surface-elevated) 25%,
-    var(--color-surface-overlay) 50%,
-    var(--color-surface-elevated) 75%
+    var(--color-bg-card) 25%,
+    var(--color-bg-elevated) 50%,
+    var(--color-bg-card) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
-  border-radius: 0.5rem;
+  border-radius: 12px;
 }
 
 /* ── Typing Indicator ──────────────────────────────────── */
@@ -126,51 +162,53 @@ body {
 .typing-dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
-/* ── Markdown Styles ───────────────────────────────────── */
+/* ── Markdown ──────────────────────────────────────────── */
 .markdown-body h1,
 .markdown-body h2,
 .markdown-body h3 {
   color: var(--color-text-primary);
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
   font-weight: 600;
 }
 
-.markdown-body h1 { font-size: 1.5rem; }
-.markdown-body h2 { font-size: 1.25rem; }
-.markdown-body h3 { font-size: 1.1rem; }
+.markdown-body h1 { font-size: 1.35rem; }
+.markdown-body h2 { font-size: 1.15rem; }
+.markdown-body h3 { font-size: 1rem; }
 
 .markdown-body p {
   margin-bottom: 0.75rem;
   line-height: 1.7;
   color: var(--color-text-secondary);
+  font-size: 0.9rem;
 }
 
 .markdown-body ul,
 .markdown-body ol {
-  padding-left: 1.5rem;
+  padding-left: 1.25rem;
   margin-bottom: 0.75rem;
 }
 
 .markdown-body li {
   margin-bottom: 0.25rem;
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: 1.65;
+  font-size: 0.9rem;
 }
 
 .markdown-body code {
-  background: var(--color-surface-overlay);
+  background: rgba(245, 158, 139, 0.1);
   padding: 0.15rem 0.4rem;
-  border-radius: 0.25rem;
+  border-radius: 6px;
   font-family: var(--font-mono);
-  font-size: 0.875rem;
-  color: var(--color-accent);
+  font-size: 0.8rem;
+  color: var(--color-coral);
 }
 
 .markdown-body pre {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 0.5rem;
+  background: var(--color-bg-app);
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
   padding: 1rem;
   overflow-x: auto;
   margin-bottom: 1rem;
@@ -183,7 +221,7 @@ body {
 }
 
 .markdown-body blockquote {
-  border-left: 3px solid var(--color-primary);
+  border-left: 3px solid var(--color-coral);
   padding-left: 1rem;
   color: var(--color-text-muted);
   margin-bottom: 0.75rem;
@@ -195,6 +233,29 @@ body {
 }
 
 .markdown-body a {
-  color: var(--color-accent);
+  color: var(--color-coral);
   text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Radial Glow (hero) ───────────────────────────────── */
+.hero-glow {
+  position: absolute;
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 139, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+  top: -15%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ── Pulse ring ────────────────────────────────────────── */
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+.pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

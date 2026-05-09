@@ -1,33 +1,22 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
-
-// ── Toast Context ─────────────────────────────────────────
-const ToastContext = createContext(null);
+import { setExternalAddToast } from '../../lib/toast';
 
 let toastIdCounter = 0;
-let externalAddToast = null;
-
-// ── Toast function (callable from anywhere) ───────────────
-export const toast = {
-  success: (message, options) => externalAddToast?.({ type: 'success', message, ...options }),
-  error: (message, options) => externalAddToast?.({ type: 'error', message, ...options }),
-  info: (message, options) => externalAddToast?.({ type: 'info', message, ...options }),
-  warning: (message, options) => externalAddToast?.({ type: 'warning', message, ...options }),
-};
 
 const icons = {
   success: <CheckCircle className="w-5 h-5 text-success" />,
   error: <AlertCircle className="w-5 h-5 text-error" />,
-  info: <Info className="w-5 h-5 text-accent" />,
+  info: <Info className="w-5 h-5 text-coral" />,
   warning: <AlertTriangle className="w-5 h-5 text-warning" />,
 };
 
-const bgColors = {
+const borderColors = {
   success: 'border-success/30',
   error: 'border-error/30',
-  info: 'border-accent/30',
+  info: 'border-border-strong',
   warning: 'border-warning/30',
 };
 
@@ -46,16 +35,16 @@ const ToastItem = ({ toast: t, onRemove }) => {
       exit={{ opacity: 0, y: -10, scale: 0.95 }}
       transition={{ duration: 0.2 }}
       className={`
-        glass-strong rounded-xl px-4 py-3 flex items-center gap-3 min-w-[300px] max-w-[420px]
-        border ${bgColors[t.type] || bgColors.info}
-        shadow-2xl
+        glass-strong rounded-[16px] px-4 py-3 flex items-center gap-3 min-w-[300px] max-w-[420px]
+        border ${borderColors[t.type] || borderColors.info}
+        shadow-[0_10px_30px_rgba(0,0,0,0.35)]
       `}
     >
       {icons[t.type] || icons.info}
       <p className="flex-1 text-sm text-text-primary">{t.message}</p>
       <button
         onClick={() => onRemove(t.id)}
-        className="text-text-muted hover:text-text-primary transition-colors"
+        className="text-text-muted hover:text-text-primary transition-colors cursor-pointer"
       >
         <X className="w-4 h-4" />
       </button>
@@ -77,8 +66,8 @@ export const Toaster = () => {
   }, []);
 
   useEffect(() => {
-    externalAddToast = addToast;
-    return () => { externalAddToast = null; };
+    setExternalAddToast(addToast);
+    return () => { setExternalAddToast(null); };
   }, [addToast]);
 
   return createPortal(
@@ -92,5 +81,3 @@ export const Toaster = () => {
     document.body
   );
 };
-
-export default toast;

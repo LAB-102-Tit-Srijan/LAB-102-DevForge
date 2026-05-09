@@ -1,8 +1,8 @@
 const prompts = [
-  'What is useEffect?',
+  'What is this concept?',
   'Summarize this lecture.',
   'Quiz me on this video.',
-  'Explain this like I\'m a beginner.',
+  'Explain like I\'m a beginner.',
 ];
 
 const SuggestedPrompts = ({ onSelect, compact = false, className = '' }) => {
@@ -12,7 +12,9 @@ const SuggestedPrompts = ({ onSelect, compact = false, className = '' }) => {
         <button
           key={i}
           onClick={() => onSelect(prompt)}
-          className={`text-left rounded-xl border border-border-subtle bg-surface-elevated hover:bg-surface-overlay hover:border-primary/30 transition-all duration-200 text-text-secondary hover:text-text-primary ${compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'}`}
+          className={`text-left rounded-full border border-border-default hover:border-border-strong bg-bg-card hover:bg-bg-elevated transition-all duration-300 text-text-muted hover:text-coral cursor-pointer ${
+            compact ? 'px-3.5 py-1.5 text-xs' : 'px-4 py-2 text-[13px]'
+          }`}
         >
           {prompt}
         </button>

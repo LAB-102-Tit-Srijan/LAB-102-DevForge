@@ -22,7 +22,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="min-h-screen bg-surface">
+        <div className="min-h-screen" style={{ backgroundColor: '#070B14' }}>
           <Navbar />
           <AnimatePresence mode="wait">
             <Routes>

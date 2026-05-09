@@ -3,19 +3,17 @@ const Card = ({
   className = '',
   glass = false,
   hover = false,
-  glow = false,
   ...props
 }) => {
   return (
     <div
       className={`
-        rounded-2xl p-6
+        rounded-[24px] p-6 card-shadow
         ${glass
           ? 'glass'
-          : 'bg-surface-elevated border border-border-subtle'
+          : 'bg-bg-card border border-border-default'
         }
-        ${hover ? 'transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5' : ''}
-        ${glow ? 'glow-primary' : ''}
+        ${hover ? 'transition-all duration-300 hover:border-border-strong hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]' : ''}
         ${className}
       `}
       {...props}
@@ -30,11 +28,11 @@ const CardHeader = ({ children, className = '' }) => (
 );
 
 const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`text-lg font-semibold text-text-primary ${className}`}>{children}</h3>
+  <h3 className={`text-xl font-semibold text-text-primary ${className}`}>{children}</h3>
 );
 
 const CardDescription = ({ children, className = '' }) => (
-  <p className={`text-sm text-text-secondary mt-1 ${className}`}>{children}</p>
+  <p className={`text-sm text-text-secondary mt-1.5 leading-relaxed ${className}`}>{children}</p>
 );
 
 const CardContent = ({ children, className = '' }) => (

@@ -66,7 +66,7 @@ const worker = new Worker('video-processing', async (job) => {
     if (inputType === 'upload' && filePath) {
       logger.info(`Extracting audio from uploaded file: ${filePath}`);
       audioPath = await extractAudio(filePath);
-      tempFiles.push(filePath); // Track uploaded file for cleanup
+      // We do NOT add filePath to tempFiles here because we want to keep it if the job retries
     } else {
       logger.info(`Downloading audio from YouTube: ${youtubeUrl}`);
       audioPath = await downloadYoutubeAudio(youtubeUrl);
@@ -115,6 +115,9 @@ const worker = new Worker('video-processing', async (job) => {
     logger.info(`✅ Video ${videoId} processed successfully (${chunks.length} chunks, ${Math.round(duration)}s)`);
 
     // ── Step 7: Cleanup temporary files ──────────────────
+    if (inputType === 'upload' && filePath) {
+      tempFiles.push(filePath); // Safe to delete original upload now that it's processed
+    }
     await cleanupTempFiles(tempFiles);
 
     return { chunks: chunks.length, duration, segments: segments.length };
@@ -126,8 +129,17 @@ const worker = new Worker('video-processing', async (job) => {
       errorMessage: err.message,
     }).catch(() => {});
 
-    // Cleanup even on failure
+    // Cleanup temporary files
     await cleanupTempFiles(tempFiles);
+    
+    // If it's an upload and this is the final attempt, clean up the original file
+    if (inputType === 'upload' && filePath) {
+      const maxAttempts = job.opts?.attempts || 1;
+      if (job.attemptsMade >= maxAttempts - 1) {
+        await cleanupTempFiles([filePath]);
+      }
+    }
+
     throw err;
   }
 }, {

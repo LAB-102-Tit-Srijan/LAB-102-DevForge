@@ -1,4 +1,4 @@
-import Groq from 'groq-sdk';
+import Groq, { toFile } from 'groq-sdk';
 import fs from 'fs-extra';
 import path from 'path';
 import { splitAudio } from './video-download.service.js';
@@ -9,7 +9,13 @@ const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB Groq Whisper limit
 
 let groq = null;
 const getGroq = () => {
-  if (!groq) groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  if (!groq) {
+    groq = new Groq({ 
+      apiKey: process.env.GROQ_API_KEY,
+      timeout: 4 * 60 * 1000, // 4 minutes
+      maxRetries: 3,
+    });
+  }
   return groq;
 };
 
@@ -53,8 +59,11 @@ async function transcribeSingleFile(audioPath, timeOffset = 0) {
   const client = getGroq();
 
   try {
+    const buffer = await fs.readFile(audioPath);
+    const file = await toFile(buffer, path.basename(audioPath));
+
     const transcription = await client.audio.transcriptions.create({
-      file: fs.createReadStream(audioPath),
+      file: file,
       model: WHISPER_MODEL,
       response_format: 'verbose_json',
       timestamp_granularities: ['segment'],

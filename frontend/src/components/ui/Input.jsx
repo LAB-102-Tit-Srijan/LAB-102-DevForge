@@ -8,22 +8,22 @@ const Input = forwardRef(({
   ...props
 }, ref) => {
   return (
-    <div className={`space-y-1.5 ${containerClassName}`}>
+    <div className={`space-y-2 ${containerClassName}`}>
       {label && (
-        <label className="block text-sm font-medium text-text-secondary">
+        <label className="block text-[13px] font-medium text-text-secondary tracking-wide">
           {label}
         </label>
       )}
       <input
         ref={ref}
         className={`
-          w-full px-4 py-2.5 rounded-xl
-          bg-surface-elevated border border-border-subtle
+          w-full px-5 py-3 rounded-[16px]
+          bg-bg-input border border-border-default
           text-text-primary placeholder-text-muted
-          transition-all duration-200
-          focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
-          disabled:opacity-50 disabled:cursor-not-allowed
-          ${error ? 'border-error focus:ring-error/50' : ''}
+          transition-all duration-300
+          focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-border-strong
+          disabled:opacity-40 disabled:cursor-not-allowed
+          ${error ? 'border-error focus:ring-error/30' : ''}
           ${className}
         `}
         {...props}

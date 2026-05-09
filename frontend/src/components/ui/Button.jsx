@@ -1,19 +1,19 @@
 import { forwardRef } from 'react';
 
 const variants = {
-  default: 'bg-primary hover:bg-primary-hover text-white shadow-lg shadow-primary/25',
-  secondary: 'bg-surface-overlay hover:bg-border-subtle text-text-primary border border-border-subtle',
-  ghost: 'hover:bg-surface-overlay text-text-secondary hover:text-text-primary',
-  outline: 'border border-border-subtle hover:bg-surface-overlay text-text-primary',
-  accent: 'bg-accent hover:bg-accent-hover text-white shadow-lg shadow-accent/25',
+  default: 'bg-gradient-to-r from-coral to-coral-light text-bg-app font-semibold shadow-lg hover:shadow-[0_0_30px_rgba(245,158,139,0.25)] hover:-translate-y-0.5',
+  secondary: 'bg-bg-card hover:bg-bg-elevated text-text-primary border border-border-default hover:border-border-strong',
+  ghost: 'hover:bg-bg-card text-text-secondary hover:text-text-primary',
+  outline: 'border border-border-default hover:border-border-strong hover:bg-bg-card text-text-secondary hover:text-text-primary',
+  accent: 'bg-gradient-to-r from-coral to-coral-light text-bg-app font-semibold shadow-lg hover:shadow-[0_0_30px_rgba(245,158,139,0.25)]',
   danger: 'bg-error hover:bg-error/80 text-white',
 };
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm rounded-lg',
-  md: 'px-4 py-2 text-sm rounded-lg',
-  lg: 'px-6 py-3 text-base rounded-xl',
-  icon: 'p-2 rounded-lg',
+  sm: 'px-4 py-2 text-[13px] rounded-[10px]',
+  md: 'px-5 py-2.5 text-sm rounded-[14px]',
+  lg: 'px-7 py-3.5 text-base rounded-[14px]',
+  icon: 'p-2.5 rounded-[12px]',
 };
 
 const Button = forwardRef(({
@@ -31,10 +31,11 @@ const Button = forwardRef(({
       disabled={disabled || loading}
       className={`
         inline-flex items-center justify-center gap-2
-        font-medium transition-all duration-200
-        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50
-        disabled:opacity-50 disabled:cursor-not-allowed
-        active:scale-[0.98]
+        font-medium transition-all duration-300 ease-out
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral/50
+        disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0
+        active:scale-[0.97]
+        cursor-pointer
         ${variants[variant]}
         ${sizes[size]}
         ${className}

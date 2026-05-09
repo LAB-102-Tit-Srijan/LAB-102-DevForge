@@ -27,25 +27,64 @@ const VideoPage = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-16">
-      <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
-        <motion.div className="lg:w-[55%] p-4 flex flex-col" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-surface-elevated border border-border-subtle shadow-2xl">
-            <ReactPlayer ref={playerRef} url={`https://www.youtube.com/watch?v=${videoId}`} width="100%" height="100%" controls config={{ youtube: { playerVars: { modestbranding: 1, rel: 0 } } }} />
+    <div className="min-h-screen" style={{ paddingTop: '80px' }}>
+      <div className="flex flex-col lg:flex-row" style={{ height: 'calc(100vh - 80px)' }}>
+        {/* Left — Video Panel (58%) */}
+        <motion.div
+          className="lg:w-[58%] p-5 flex flex-col"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="rounded-[24px] bg-bg-card border border-border-default p-5 card-shadow flex-shrink-0">
+            <div className="relative w-full aspect-video rounded-[16px] overflow-hidden bg-bg-app">
+              <ReactPlayer
+                ref={playerRef}
+                url={`https://www.youtube.com/watch?v=${videoId}`}
+                width="100%"
+                height="100%"
+                controls
+                config={{ youtube: { playerVars: { modestbranding: 1, rel: 0 } } }}
+              />
+            </div>
           </div>
-          <div className="mt-4 px-1">
-            <h1 className="text-xl font-semibold text-text-primary">Lecture Video</h1>
-            <p className="text-sm text-text-secondary mt-1">Ask questions, generate summaries, or take a quiz.</p>
+          <div className="mt-4 px-2">
+            <h1 className="text-xl font-semibold text-text-primary tracking-tight">Lecture Video</h1>
+            <p className="text-sm text-text-secondary mt-1.5">Ask questions, generate summaries, or take a quiz.</p>
           </div>
         </motion.div>
-        <motion.div className="lg:w-[45%] flex flex-col border-l border-border-subtle" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-          <div className="flex gap-1 p-2 border-b border-border-subtle">
-            {tabs.map((tab) => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === tab.id ? 'bg-primary text-white shadow-lg shadow-primary/25' : 'text-text-secondary hover:text-text-primary hover:bg-surface-overlay'}`}>
-                {tab.icon}{tab.label}
-              </button>
-            ))}
+
+        {/* Right — Chat Panel (42%) */}
+        <motion.div
+          className="lg:w-[42%] flex flex-col border-l border-border-default"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+        >
+          {/* Tab Bar */}
+          <div className="flex gap-1 p-3 border-b border-border-default bg-bg-secondary/50">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-[14px] text-[13px] font-medium
+                    transition-all duration-300 cursor-pointer
+                    ${isActive
+                      ? 'bg-gradient-to-r from-coral to-coral-light text-bg-app shadow-lg'
+                      : 'text-text-muted hover:text-text-primary hover:bg-bg-card'
+                    }
+                  `}
+                >
+                  {tab.icon}{tab.label}
+                </button>
+              );
+            })}
           </div>
+
+          {/* Panel Content */}
           <div className="flex-1 overflow-hidden">
             {activeTab === 'chat' && <ChatPanel videoId={videoId} onTimestampClick={seekToTimestamp} />}
             {activeTab === 'summary' && <SummaryPanel videoId={videoId} />}
