@@ -1,8 +1,7 @@
 const prompts = [
-  'What is this concept?',
   'Summarize this lecture.',
   'Quiz me on this video.',
-  'Explain like I\'m a beginner.',
+  'Explain the last 5 minutes.',
 ];
 
 const SuggestedPrompts = ({ onSelect, compact = false, className = '' }) => {

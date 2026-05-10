@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sparkles, Upload, BarChart3, FileVideo } from 'lucide-react';
@@ -31,7 +31,7 @@ const Navbar = () => {
             <Sparkles className="w-4 h-4" style={{ color: 'var(--accent)' }} />
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: '20px', color: 'var(--text-primary)' }}>
-            SheriSense
+            SherySense
           </span>
         </Link>
 

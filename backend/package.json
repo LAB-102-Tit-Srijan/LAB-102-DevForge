@@ -1,7 +1,7 @@
-{
-  "name": "sherisense-backend",
+﻿{
+  "name": "SherySense-backend",
   "version": "1.0.0",
-  "description": "SheriSense API — AI-Powered Learning Companion Backend",
+  "description": "SherySense API â€” AI-Powered Learning Companion Backend",
   "type": "module",
   "main": "src/index.js",
   "scripts": {

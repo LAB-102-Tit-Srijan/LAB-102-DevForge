@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { BookOpen, Clock, FileText, BookMarked, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -49,7 +49,7 @@ const SummaryPanel = ({ videoId }) => {
       // Title
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(16);
-      pdf.text('SheriSense Video Summary', margin, margin + 5);
+      pdf.text('SherySense Video Summary', margin, margin + 5);
       
       // Content
       pdf.setFont('helvetica', 'normal');
@@ -69,7 +69,7 @@ const SummaryPanel = ({ videoId }) => {
         y += 5.5; // Line height
       }
       
-      pdf.save('SheriSense_Summary.pdf');
+      pdf.save('SherySense_Summary.pdf');
     } catch (err) {
       console.error('Failed to generate PDF', err);
     }

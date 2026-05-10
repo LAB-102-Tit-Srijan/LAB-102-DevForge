@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Loader2, CheckCircle, AlertCircle, FileVideo, X, ArrowRight, Upload, Play, Sparkles } from 'lucide-react';
@@ -176,7 +176,7 @@ const LandingPage = () => {
               className="mx-auto mb-12 leading-relaxed"
               style={{ maxWidth: '520px', fontSize: '18px', color: 'var(--text-secondary)' }}
             >
-              Transform video lectures into intelligent study sessions — ask questions,
+              Transform video lectures into intelligent study sessions â€” ask questions,
               jump to timestamps, generate quizzes, and create smart summaries.
             </motion.p>
 
@@ -344,7 +344,7 @@ const LandingPage = () => {
 
                 {status === 'ready' && (
                   <p className="text-sm mt-6 text-center font-medium" style={{ color: 'var(--success)' }}>
-                    ✨ Redirecting to your learning workspace...
+                    âœ¨ Redirecting to your learning workspace...
                   </p>
                 )}
               </div>
@@ -358,10 +358,10 @@ const LandingPage = () => {
         <div className="max-w-[1400px] mx-auto px-5 md:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4" style={{ color: 'var(--accent)' }} />
-            <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>SheriSense</span>
+            <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>SherySense</span>
           </div>
           <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
-            Built with ❤️ for Sheriyans Coding School
+            Built with â¤ï¸ for Sheriyans Coding School
           </p>
         </div>
       </footer>

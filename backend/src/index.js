@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+﻿import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' }); // Load root .env for local dev
 
 import express from 'express';
@@ -17,11 +17,11 @@ import analyticsRoutes from './routes/analytics.routes.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ── Security Middleware ──────────────────────────────────
+// â”€â”€ Security Middleware â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
 app.use(cors({ origin: '*', credentials: true }));
 
-// ── Rate Limiting ────────────────────────────────────────
+// â”€â”€ Rate Limiting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Scalability: Rate limiting protects against abuse and ensures
 // fair resource distribution across concurrent users.
 const limiter = rateLimit({
@@ -71,7 +71,7 @@ const start = async () => {
     await connectDB();
     await connectRedis();
     app.listen(PORT, () => {
-      logger.info(`🚀 SheriSense API running on port ${PORT}`);
+      logger.info(`ðŸš€ SherySense API running on port ${PORT}`);
     });
   } catch (err) {
     logger.error(`Failed to start server: ${err.message}`);

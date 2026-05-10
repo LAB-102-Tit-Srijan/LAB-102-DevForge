@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactPlayer from 'react-player';
-import { MessageSquare, BookOpen, HelpCircle, FileVideo, Upload as UploadIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { MessageSquare, BookOpen, HelpCircle, FileVideo, Upload as UploadIcon, PanelLeftClose, PanelLeftOpen, X, Sparkles } from 'lucide-react';
 import ChatPanel from '../components/chat/ChatPanel';
 import SummaryPanel from '../components/summary/SummaryPanel';
 import QuizPanel from '../components/quiz/QuizPanel';
@@ -18,10 +18,14 @@ const VideoPage = () => {
   const playerRef = useRef(null);
   const [activeTab, setActiveTab] = useState('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const { setActiveVideo } = useChatStore();
 
   useEffect(() => {
     setActiveVideo(videoId || null);
+    if (videoId && videoId.startsWith('upload_')) {
+      setIsSidebarOpen(false);
+    }
   }, [videoId, setActiveVideo]);
 
   const { data: video, isLoading, error } = useQuery({
@@ -116,7 +120,7 @@ const VideoPage = () => {
             <>
               {/* Center — Video Player */}
               <motion.div
-                className="lg:w-[60%] p-5 flex flex-col overflow-y-auto custom-scrollbar"
+                className={`p-5 flex flex-col overflow-y-auto custom-scrollbar transition-all duration-300 ${isAiPanelOpen ? 'lg:w-[60%]' : 'w-full'}`}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4 }}
@@ -182,55 +186,79 @@ const VideoPage = () => {
               </motion.div>
 
               {/* Right — AI Panel */}
-              <motion.div
-                className="lg:w-[40%] flex flex-col border-l"
-                style={{ borderColor: 'var(--border-muted)', background: 'var(--bg-base)' }}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1, duration: 0.4 }}
-              >
-                {/* Tab Bar */}
-                <div className="p-4 border-b" style={{ borderColor: 'var(--border-muted)', background: 'var(--bg-app)' }}>
-                  <div className="tab-bar m-0">
-                    {tabs.map((tab) => {
-                      const isActive = activeTab === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          onClick={() => setActiveTab(tab.id)}
-                          className={`tab-btn flex items-center justify-center gap-2 ${isActive ? 'active' : ''}`}
-                        >
-                          {isActive && (
-                            <motion.div
-                              layoutId="activeTabBg"
-                              className="tab-active-bg inset-0"
-                              transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
-                            />
-                          )}
-                          <span className="relative z-10 flex items-center gap-2">
-                            {tab.icon}
-                            <span className="hidden sm:inline">{tab.label}</span>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Panel Content */}
-                <div className="flex-1 overflow-hidden relative">
-                  {(video?.processingStatus !== 'ready' && video?.status !== 'ready') && (
-                    <div className="absolute inset-0 z-10 bg-bg-app/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
-                      <div className="w-12 h-12 rounded-full border-4 border-bg-card border-t-coral animate-spin mb-4" />
-                      <h3 className="text-text-primary font-medium mb-1">Processing Video...</h3>
-                      <p className="text-sm text-text-secondary">AI features will be available once transcription and embedding are complete.</p>
+              <AnimatePresence>
+                {isAiPanelOpen && (
+                  <motion.div
+                    className="flex flex-col border-l z-20"
+                    style={{ borderColor: 'var(--border-muted)', background: 'var(--bg-base)', width: '40%', minWidth: '350px' }}
+                    initial={{ opacity: 0, x: '100%', width: 0 }}
+                    animate={{ opacity: 1, x: 0, width: '40%' }}
+                    exit={{ opacity: 0, x: '100%', width: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {/* Tab Bar */}
+                    <div className="p-4 border-b flex justify-between items-center" style={{ borderColor: 'var(--border-muted)', background: 'var(--bg-app)' }}>
+                      <div className="tab-bar m-0 flex-1">
+                        {tabs.map((tab) => {
+                          const isActive = activeTab === tab.id;
+                          return (
+                            <button
+                              key={tab.id}
+                              onClick={() => setActiveTab(tab.id)}
+                              className={`tab-btn flex items-center justify-center gap-2 ${isActive ? 'active' : ''}`}
+                            >
+                              {isActive && (
+                                <motion.div
+                                  layoutId="activeTabBg"
+                                  className="tab-active-bg inset-0"
+                                  transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                                />
+                              )}
+                              <span className="relative z-10 flex items-center gap-2">
+                                {tab.icon}
+                                <span className="hidden sm:inline">{tab.label}</span>
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button onClick={() => setIsAiPanelOpen(false)} className="ml-4 p-2 rounded-full hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] transition-colors">
+                        <X className="w-5 h-5" />
+                      </button>
                     </div>
-                  )}
-                  {activeTab === 'chat' && <ChatPanel videoId={videoId} onTimestampClick={seekToTimestamp} />}
-                  {activeTab === 'summary' && <SummaryPanel videoId={videoId} />}
-                  {activeTab === 'quiz' && <QuizPanel videoId={videoId} />}
-                </div>
-              </motion.div>
+
+                    {/* Panel Content */}
+                    <div className="flex-1 overflow-hidden relative">
+                      {(video?.processingStatus !== 'ready' && video?.status !== 'ready') && (
+                        <div className="absolute inset-0 z-10 bg-bg-app/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+                          <div className="w-12 h-12 rounded-full border-4 border-bg-card border-t-coral animate-spin mb-4" />
+                          <h3 className="text-text-primary font-medium mb-1">Processing Video...</h3>
+                          <p className="text-sm text-text-secondary">AI features will be available once transcription and embedding are complete.</p>
+                        </div>
+                      )}
+                      {activeTab === 'chat' && <ChatPanel videoId={videoId} onTimestampClick={seekToTimestamp} />}
+                      {activeTab === 'summary' && <SummaryPanel videoId={videoId} />}
+                      {activeTab === 'quiz' && <QuizPanel videoId={videoId} />}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* FAB to open AI Panel */}
+              <AnimatePresence>
+                {!isAiPanelOpen && (
+                  <motion.button
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    onClick={() => setIsAiPanelOpen(true)}
+                    className="absolute bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[var(--accent)] text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center cursor-pointer"
+                    title="Open AI Assistant"
+                  >
+                    <Sparkles className="w-6 h-6" />
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </>
           )}
         </div>

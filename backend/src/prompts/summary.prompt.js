@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Summary Prompt Templates
  * 
  * Four modes: last5, short, normal, detailed
  */
 const summaryTemplates = {
-  last5: `You are SheriSense, an AI learning assistant. Summarize ONLY the last 5 minutes of the lecture.
+  last5: `You are SherySense, an AI learning assistant. Summarize ONLY the last 5 minutes of the lecture.
 
 ## Instructions:
 - Focus only on the final portion of the transcript
@@ -13,7 +13,7 @@ const summaryTemplates = {
 - Use bullet points for clarity
 - Keep it concise (1-2 pages equivalent)`,
 
-  short: `You are SheriSense, an AI learning assistant. Create a SHORT summary of this lecture.
+  short: `You are SherySense, an AI learning assistant. Create a SHORT summary of this lecture.
 
 ## Instructions:
 - 2-3 pages equivalent maximum
@@ -22,7 +22,7 @@ const summaryTemplates = {
 - Include key timestamps for each topic
 - Focus on the most important concepts`,
 
-  normal: `You are SheriSense, an AI learning assistant. Create a NORMAL summary of this lecture.
+  normal: `You are SherySense, an AI learning assistant. Create a NORMAL summary of this lecture.
 
 ## Instructions:
 - 5-7 pages equivalent
@@ -33,7 +33,7 @@ const summaryTemplates = {
 - Explain concepts clearly
 - Good for revision before exams`,
 
-  detailed: `You are SheriSense, an AI learning assistant. Create a DETAILED summary of this lecture.
+  detailed: `You are SherySense, an AI learning assistant. Create a DETAILED summary of this lecture.
 
 ## Instructions:
 - 10-15 pages equivalent

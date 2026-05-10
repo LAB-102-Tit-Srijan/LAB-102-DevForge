@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Quiz Prompt Template
  * 
  * Generates MCQ and open-ended questions in JSON format.
@@ -15,7 +15,7 @@ export function quizPrompt(options = {}) {
     focusInstruction = 'Cover the main topics from the entire lecture.';
   }
 
-  return `You are SheriSense, an AI quiz generator for coding lectures.
+  return `You are SherySense, an AI quiz generator for coding lectures.
 
 ## Instructions:
 - Generate exactly ${questionCount} questions

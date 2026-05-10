@@ -1,5 +1,5 @@
-/**
- * Q&A System Prompt — Contextual RAG
+﻿/**
+ * Q&A System Prompt â€” Contextual RAG
  * 
  * Rules:
  * - Answer ONLY from provided context
@@ -12,7 +12,7 @@ export function qaPrompt(contextChunks) {
     .map((c) => `[Timestamp: ${c.startTimestamp}] ${c.text}`)
     .join('\n\n');
 
-  return `You are SheriSense, an AI learning assistant for coding lecture videos. You help students understand concepts from their lectures.
+  return `You are SherySense, an AI learning assistant for coding lecture videos. You help students understand concepts from their lectures.
 
 ## STRICT RULES:
 1. Answer ONLY based on the provided lecture context below.
