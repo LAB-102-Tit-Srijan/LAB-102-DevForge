@@ -8,6 +8,9 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     python3 \
     python3-pip \
+    python3-dev \
+    build-essential \
+    libsqlite3-dev \
     curl \
     redis-server \
     supervisor \
@@ -18,23 +21,22 @@ RUN pip3 install --break-system-packages -U yt-dlp chromadb
 
 WORKDIR /app
 
-# Copy the entire project (dockerignore should exclude node_modules and .git)
+# Copy the entire project
 COPY . .
 
 # --- Backend Setup ---
 WORKDIR /app/backend
-# Ensure chromadb-default-embed and other dependencies are installed
-RUN npm install chromadb-default-embed && npm ci --only=production
+RUN npm install
 
 # --- Frontend Setup ---
 WORKDIR /app/frontend
-# Install frontend dependencies and build
-RUN npm ci && npm run build
+RUN npm install
+RUN npm run build
 
 # Move built frontend to backend/public for static serving
-RUN mkdir -p /app/backend/public && mv dist/* /app/backend/public/
+RUN mkdir -p /app/backend/public && cp -r dist/* /app/backend/public/
 
-# Clean up frontend source to save space (optional but recommended)
+# Clean up frontend source to save space
 WORKDIR /app
 RUN rm -rf /app/frontend
 
