@@ -1,5 +1,12 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' }); // Load root .env for local dev
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env from the project root
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 import express from 'express';
 import path from 'path';
@@ -20,7 +27,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // â”€â”€ Security Middleware â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-app.use(helmet({ crossOriginEmbedderPolicy: false }));
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://www.youtube.com", "https://s.ytimg.com"],
+      "frame-src": ["'self'", "https://www.youtube.com"],
+      "img-src": ["'self'", "data:", "https://res.cloudinary.com"],
+      "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      "font-src": ["'self'", "https://fonts.gstatic.com"],
+      "connect-src": ["'self'"],
+      "frame-ancestors": ["'self'", "https://huggingface.co", "https://*.hf.space"],
+    },
+  },
+}));
 app.use(cors({ origin: '*', credentials: true }));
 
 // â”€â”€ Rate Limiting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -69,8 +90,7 @@ app.use((err, req, res, next) => {
 });
 
 // Serve static frontend in production
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Paths are already defined above
 const publicPath = path.join(__dirname, '../public');
 app.use(express.static(publicPath));
 
@@ -82,7 +102,7 @@ const start = async () => {
   try {
     await connectDB();
     await connectRedis();
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       logger.info(`ðŸš€ SherySense API running on port ${PORT}`);
     });
   } catch (err) {

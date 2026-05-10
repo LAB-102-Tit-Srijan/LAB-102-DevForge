@@ -32,9 +32,15 @@ RUN cd frontend && npm install
 # --- Source Code Layer ---
 COPY . .
 
+# Fix permissions for HF Spaces (runs as UID 1000)
+# We create necessary directories and ensure the user 1000 owns /app
+RUN mkdir -p /app/chroma_data /app/backend/uploads /app/backend/temp && \
+    chown -R 1000:1000 /app
+
 # --- Build Frontend ---
 WORKDIR /app/frontend
-RUN npm run build
+# Ensure VITE_API_URL is empty for production build (uses relative paths)
+RUN VITE_API_URL="" npm run build
 RUN mkdir -p /app/backend/public && cp -r dist/* /app/backend/public/
 
 # Clean up frontend source
@@ -47,11 +53,14 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=7860
-ENV REDIS_URL=redis://localhost:6379
-ENV CHROMA_URL=http://localhost:8000
+ENV REDIS_URL=redis://127.0.0.1:6379
+ENV CHROMA_URL=http://127.0.0.1:8000
 
 # Expose port
 EXPOSE 7860
+
+# Switch to non-root user for HF Spaces
+USER 1000
 
 # Command to run supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
