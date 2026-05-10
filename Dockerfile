@@ -1,0 +1,54 @@
+FROM node:20-slim
+
+# Set environment variable to avoid interactive prompts during apt install
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    python3 \
+    python3-pip \
+    curl \
+    redis-server \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install python dependencies (yt-dlp and chromadb)
+RUN pip3 install --break-system-packages -U yt-dlp chromadb
+
+WORKDIR /app
+
+# Copy the entire project (dockerignore should exclude node_modules and .git)
+COPY . .
+
+# --- Backend Setup ---
+WORKDIR /app/backend
+# Ensure chromadb-default-embed and other dependencies are installed
+RUN npm install chromadb-default-embed && npm ci --only=production
+
+# --- Frontend Setup ---
+WORKDIR /app/frontend
+# Install frontend dependencies and build
+RUN npm ci && npm run build
+
+# Move built frontend to backend/public for static serving
+RUN mkdir -p /app/backend/public && mv dist/* /app/backend/public/
+
+# Clean up frontend source to save space (optional but recommended)
+WORKDIR /app
+RUN rm -rf /app/frontend
+
+# Copy supervisor config
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Set environment variables for production inside container
+ENV NODE_ENV=production
+ENV PORT=7860
+ENV REDIS_URL=redis://localhost:6379
+ENV CHROMA_URL=http://localhost:8000
+
+# Expose port (Hugging Face default)
+EXPOSE 7860
+
+# Command to run supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
