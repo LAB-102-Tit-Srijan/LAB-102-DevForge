@@ -3,7 +3,7 @@ FROM node:20-slim
 # Set environment variable to avoid interactive prompts during apt install
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies
+# Install system dependencies (cached)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     python3 \
@@ -16,40 +16,41 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     && rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies (yt-dlp and chromadb)
+# Install python dependencies (cached)
 RUN pip3 install --break-system-packages -U yt-dlp chromadb
 
 WORKDIR /app
 
-# Copy the entire project
+# --- Dependency Cache Layers ---
+# Copy package files first to cache npm install layers
+COPY backend/package*.json ./backend/
+RUN cd backend && npm install
+
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm install
+
+# --- Source Code Layer ---
 COPY . .
 
-# --- Backend Setup ---
-WORKDIR /app/backend
-RUN npm install
-
-# --- Frontend Setup ---
+# --- Build Frontend ---
 WORKDIR /app/frontend
-RUN npm install
 RUN npm run build
-
-# Move built frontend to backend/public for static serving
 RUN mkdir -p /app/backend/public && cp -r dist/* /app/backend/public/
 
-# Clean up frontend source to save space
+# Clean up frontend source
 WORKDIR /app
 RUN rm -rf /app/frontend
 
 # Copy supervisor config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Set environment variables for production inside container
+# Set environment variables
 ENV NODE_ENV=production
 ENV PORT=7860
 ENV REDIS_URL=redis://localhost:6379
 ENV CHROMA_URL=http://localhost:8000
 
-# Expose port (Hugging Face default)
+# Expose port
 EXPOSE 7860
 
 # Command to run supervisor
