@@ -83,13 +83,19 @@ const VideoSidebar = ({ currentVideoId }) => {
                 onClick={() => navigate(`/library/${video.videoId}`)}
               >
                 <div className="relative w-24 h-16 rounded-[6px] overflow-hidden bg-black flex-shrink-0 border border-border-default">
-                  {video.thumbnailUrl ? (
-                    <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Film className="w-6 h-6" style={{ color: 'var(--text-muted)' }} />
-                    </div>
-                  )}
+                  {(() => {
+                    // Derive thumbnail: explicit field > YouTube thumbnail > grey icon
+                    const ytUrl = video.youtubeUrl || video.sourceUrl || '';
+                    const ytMatch = ytUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                    const thumbSrc = video.thumbnailUrl || (ytMatch ? `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg` : null);
+                    return thumbSrc ? (
+                      <img src={thumbSrc} alt={video.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Film className="w-6 h-6" style={{ color: 'var(--text-muted)' }} />
+                      </div>
+                    );
+                  })()}
                   {video.duration > 0 && (
                     <div className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-medium text-white flex items-center gap-1">
                       <Clock className="w-3 h-3" />

@@ -5,7 +5,7 @@ import { Worker } from 'bullmq';
 import Redis from 'ioredis';
 import mongoose from 'mongoose';
 import { resolve } from 'path';
-import { downloadYoutubeAudio, extractAudio, cleanupTempFiles, getAudioDuration, downloadHttpVideo } from '../services/video-download.service.js';
+import { downloadYoutubeVideo, extractAudio, cleanupTempFiles, getAudioDuration, downloadHttpVideo } from '../services/video-download.service.js';
 import { transcribeAudio } from '../services/transcription.service.js';
 import { chunkTranscript } from '../services/chunking.service.js';
 import { upsertChunks } from '../services/chroma.service.js';
@@ -119,8 +119,11 @@ const worker = new Worker('video-processing', async (job) => {
       audioPath = await extractAudio(localVideoPath);
       // We do NOT add the original Cloudinary URL to tempFiles yet.
     } else {
-      logger.info(`Downloading audio from YouTube: ${youtubeUrl}`);
-      audioPath = await downloadYoutubeAudio(youtubeUrl);
+      logger.info(`Downloading video from YouTube: ${youtubeUrl}`);
+      const videoPath = await downloadYoutubeVideo(youtubeUrl);
+      tempFiles.push(videoPath);
+      logger.info(`Extracting audio from downloaded video: ${videoPath}`);
+      audioPath = await extractAudio(videoPath);
     }
     tempFiles.push(audioPath);
     await job.updateProgress(30);

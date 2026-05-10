@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs-extra';
@@ -35,61 +35,95 @@ await fs.ensureDir(TEMP_DIR);
 await fs.ensureDir(UPLOAD_DIR);
 
 /**
- * Download audio from a YouTube URL using yt-dlp.
+ * Download video from a YouTube URL using yt-dlp (spawn + watchdog).
  *
- * Scalability: yt-dlp is the industry-standard tool for YouTube
- * downloads and handles rate limiting, format selection, and
- * geo-restrictions automatically.
+ * FIX-HANG-1: Uses single-stream "best[ext=mp4]/best" format to avoid
+ * the ffmpeg audio-merge hang caused by YouTube DASH stream throttling.
+ * FIX-HANG-2: Wraps spawn in a 5-minute watchdog that SIGKILLs on timeout.
+ * FIX-HANG-3: Adds --socket-timeout / --fragment-retries to abort stale sockets.
  *
  * @param {string} url - YouTube video URL
- * @returns {Promise<string>} Path to downloaded audio file
+ * @returns {Promise<string>} Path to downloaded video file
  */
-export async function downloadYoutubeAudio(url) {
+export async function downloadYoutubeVideo(url) {
   const filename = `yt_${Date.now()}`;
   const outputTemplate = path.join(TEMP_DIR, `${filename}.%(ext)s`);
 
   try {
-    // Optimized yt-dlp command for modern YouTube challenges:
-    // -f "ba": best audio
-    // --extractor-args: use mobile/web clients to bypass "n-challenge"
-    // --no-check-certificates: avoid SSL issues in some environments
-    let cmd = `yt-dlp --no-playlist -f "ba" -x --audio-format mp3 --audio-quality 3 --no-check-certificates --extractor-args "youtube:player_client=android_web,web" -o "${outputTemplate}" "${url}"`;
+    // FIX-HANG-1: Single pre-muxed stream — no separate audio stream, no ffmpeg merge
+    // FIX-HANG-5: Removed --merge-output-format, -x, --audio-format (all require separate streams)
+    const args = [
+      url,
+      '-f', 'best[ext=mp4]/best',
+      '-o', outputTemplate,
+      '--no-playlist',
+      '--socket-timeout', '30',     // FIX-HANG-3: abort if no data for 30s
+      '--retries', '3',
+      '--fragment-retries', '3',
+      '--no-part',
+      '--no-warnings',
+      '--no-check-certificates'
+    ];
 
-    // Check for cookies file (helps bypass YouTube bot detection/429)
     const cookiesPath = path.resolve(process.cwd(), 'cookies.txt');
     if (await fs.pathExists(cookiesPath)) {
-      cmd += ` --cookies "${cookiesPath}"`;
+      args.push('--cookies', cookiesPath);
       logger.info('Using cookies.txt for YouTube download');
     }
 
-    logger.info(`Downloading YouTube audio: ${url}`);
+    logger.info(`Downloading YouTube video: ${url}`);
 
-    const { stdout, stderr } = await execAsync(cmd, { timeout: 300000 }); // 5 min timeout
-    logger.debug(`yt-dlp output: ${stdout}`);
+    // FIX-HANG-2: Hard watchdog — kill process if it hangs beyond 5 minutes
+    const DOWNLOAD_TIMEOUT_MS = 5 * 60 * 1000;
+    await new Promise((resolve, reject) => {
+      const proc = spawn('yt-dlp', args);
+      let stderr = '';
 
-    // Find the output file (yt-dlp creates it with .mp3 extension)
-    const outputPath = path.join(TEMP_DIR, `${filename}.mp3`);
+      const watchdog = setTimeout(() => {
+        proc.kill('SIGKILL');
+        reject(new Error('yt-dlp timed out after 5 minutes — killed'));
+      }, DOWNLOAD_TIMEOUT_MS);
 
-    // Verify file exists
+      proc.stderr.on('data', (data) => {
+        stderr += data.toString();
+        if (data.toString().includes('%')) {
+          logger.debug(`[yt-dlp] ${data.toString().trim()}`);
+        }
+      });
+
+      proc.on('close', (code) => {
+        clearTimeout(watchdog);
+        if (code === 0) resolve();
+        else reject(new Error(`yt-dlp exited with code ${code}:\n${stderr}`));
+      });
+
+      proc.on('error', (err) => {
+        clearTimeout(watchdog);
+        reject(new Error(`yt-dlp spawn error: ${err.message}`));
+      });
+    });
+
+    // Find the output file
+    const outputPath = path.join(TEMP_DIR, `${filename}.mp4`);
     if (await fs.pathExists(outputPath)) {
       const stats = await fs.stat(outputPath);
-      logger.info(`Downloaded audio: ${outputPath} (${(stats.size / 1024 / 1024).toFixed(1)}MB)`);
+      logger.info(`Downloaded video: ${outputPath} (${(stats.size / 1024 / 1024).toFixed(1)}MB)`);
       return outputPath;
     }
 
-    // Fallback: search for any file matching the pattern
+    // Fallback: any file matching the prefix
     const files = await fs.readdir(TEMP_DIR);
     const match = files.find((f) => f.startsWith(filename));
     if (match) {
       const matchPath = path.join(TEMP_DIR, match);
-      logger.info(`Downloaded audio (fallback): ${matchPath}`);
+      logger.info(`Downloaded video (fallback): ${matchPath}`);
       return matchPath;
     }
 
     throw new Error('yt-dlp completed but output file not found');
   } catch (err) {
-    logger.error(`YouTube download failed: ${err.message}`);
-    throw new Error(`Failed to download YouTube audio: ${err.message}`);
+    logger.error(`YouTube video download failed: ${err.message}`);
+    throw new Error(`Failed to download YouTube video: ${err.message}`);
   }
 }
 

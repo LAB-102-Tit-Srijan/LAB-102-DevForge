@@ -43,7 +43,10 @@ const VideoPage = () => {
 
   const seekToTimestamp = useCallback((seconds) => {
     if (playerRef.current) {
-      if (typeof playerRef.current.seekTo === 'function') {
+      if (playerRef.current.tagName === 'IFRAME') {
+        playerRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [seconds, true] }), '*');
+        playerRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+      } else if (typeof playerRef.current.seekTo === 'function') {
         playerRef.current.seekTo(seconds, 'seconds'); // ReactPlayer
       } else {
         playerRef.current.currentTime = seconds; // Native video
@@ -139,18 +142,14 @@ const VideoPage = () => {
                         className="w-full h-full bg-black outline-none"
                       />
                     ) : (
-                      <ReactPlayer
+                      // YouTube video — use native iframe to guarantee it works and bypass ReactPlayer bugs
+                      <iframe
                         ref={playerRef}
-                        url={video?.sourceUrl || `https://www.youtube.com/watch?v=${videoId}`}
-                        width="100%"
-                        height="100%"
-                        controls
-                        playsinline
-                        pip
-                        config={{
-                          youtube: { playerVars: { modestbranding: 1, rel: 0 } },
-                          file: { attributes: { controlsList: 'nodownload' } }
-                        }}
+                        className="w-full h-full bg-black border-0"
+                        src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&enablejsapi=1`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title="YouTube Video Player"
                       />
                     )}
                   </div>
