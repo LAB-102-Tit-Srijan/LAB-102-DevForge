@@ -1,4 +1,14 @@
-﻿# SherySense â€” AI-Powered Learning Companion
+---
+title: SherySense
+emoji: 🚀
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
+# SherySense — AI-Powered Learning Companion
 
 > Turn every coding lecture into an interactive AI tutor.
 
